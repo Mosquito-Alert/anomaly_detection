@@ -1,0 +1,3 @@
+[submodule "MosquitoAlertES"]
+	path = MosquitoAlertES
+	url = https://github.com/Mosquito-Alert/MosquitoAlertES

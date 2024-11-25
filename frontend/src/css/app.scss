@@ -1,0 +1,26 @@
+// app global css in SCSS form
+// Custom
+
+.text-anomaly-usual {
+  color: var(--q-positive) !important;
+}
+
+.bg-anomaly-usual {
+  background-color: var(--q-positive) !important;
+}
+
+.text-anomaly-higher {
+  color: var(--q-negative) !important;
+}
+
+.bg-anomaly-higher {
+  background-color: var(--q-negative) !important;
+}
+
+.text-anomaly-lower {
+  color: #85b0d5 !important;
+}
+
+.bg-anomaly-lower {
+  background-color: #85b0d5 !important;
+}
