@@ -133,7 +133,7 @@ const layerRef = ref()
 const sourceRef = ref()
 const basemapLayerUrl = ref("https://basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}.png");
 const labelsLayerUrl = ref("https://basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}.png");
-const wfsUrl = ref("https://mapserver.mosquitoalert.com/geoserver/mosquitoalert/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=mosquitoalert%3Aspain_municipalities_anomaly_detection&srsName=EPSG:4326&outputFormat=application%2Fjson");
+const wfsUrl = ref("https://mapserver.mosquitoalert.com/geoserver/mosquitoalert/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=mosquitoalert%3Aspain_municipalities_anomaly_detection&srsName=EPSG:4326&outputFormat=application%2Fjson&propertyName=geom,NAMEUNIT,NAMEUNIT_NUT2,anomaly,last_update");
 const geoJson = new GeoJSON();
 
 const features = ref([]);
