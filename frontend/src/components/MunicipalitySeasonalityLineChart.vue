@@ -41,7 +41,7 @@ export default {
           service: 'WFS',
           version: '2.0.0',
           request: 'GetFeature',
-          typeName: 'mosquitoalert:anomaly_seasonality',
+          typeName: 'mosquitoalert:anomaly_seasonality_bites',
           outputFormat: 'application/json',
           viewparams: `feature_id:${props.featureId.split('.')[1]};`
         });

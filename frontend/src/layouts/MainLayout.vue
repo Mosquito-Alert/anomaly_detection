@@ -1,6 +1,19 @@
 <template>
-  <q-layout view="lHr lpR lFr">
-    <q-drawer show-if-above side="left" :width="drawerWidth" class="bg-white q-py-md overflow-hidden">
+  <q-layout view="hHh lpR lFr">
+    <q-header class="bg-white text-black">
+      <q-toolbar>
+        <q-avatar square>
+          <img src="~assets/logo.png">
+        </q-avatar>
+        <q-toolbar-title class="text-h4">Anomaly Detection / Spain</q-toolbar-title>
+
+        <span class="text-grey" v-if="lastUpdateFormattedDate"> {{ lastUpdateFormattedDate }}</span>
+        <q-skeleton type='QBadge' v-if="lastUpdateFormattedDate === undefined" />
+
+      </q-toolbar>
+    </q-header>
+    <q-drawer show-if-above side="left" :width="drawerWidth" class="bg-white q-pb-md overflow-hidden">
+      <q-separator class="q-mb-md" />
       <q-select v-model="selectedMunicipality" @update:model-value="updateSelection" :options="filteredOptions"
         hide-bottom-space clearable autofocus :use-input="!selectedFeature" input-debounce="20" input-class="text-h2"
         input-style="min-height: 3.75rem" @filter="searchFilterFn" :placeholder="selectedFeature ? '' : 'Spain'"
@@ -133,7 +146,7 @@ const layerRef = ref()
 const sourceRef = ref()
 const basemapLayerUrl = ref("https://basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}.png");
 const labelsLayerUrl = ref("https://basemaps.cartocdn.com/rastertiles/light_only_labels/{z}/{x}/{y}.png");
-const wfsUrl = ref("https://mapserver.mosquitoalert.com/geoserver/mosquitoalert/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=mosquitoalert%3Aspain_municipalities_anomaly_detection&srsName=EPSG:4326&outputFormat=application%2Fjson&propertyName=geom,NAMEUNIT,NAMEUNIT_NUT2,anomaly,last_update");
+const wfsUrl = ref("https://mapserver.mosquitoalert.com/geoserver/mosquitoalert/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=mosquitoalert%3Aspain_municipalities_anomaly_detection_bites&srsName=EPSG:4326&outputFormat=application%2Fjson&propertyName=geom,NAMEUNIT,NAMEUNIT_NUT2,anomaly,last_update");
 const geoJson = new GeoJSON();
 
 const features = ref([]);

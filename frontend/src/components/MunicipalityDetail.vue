@@ -138,7 +138,7 @@ export default {
           service: 'WFS',
           version: '2.0.0',
           request: 'GetFeature',
-          typeName: 'mosquitoalert:spain_municipalities_anomaly_detection',
+          typeName: 'mosquitoalert:spain_municipalities_anomaly_detection_bites',
           outputFormat: 'application/json',
           featureID: props.featureId
         });
@@ -162,7 +162,7 @@ export default {
           service: 'WFS',
           version: '2.0.0',
           request: 'GetFeature',
-          typeName: 'mosquitoalert:anomaly_detection_histories',
+          typeName: 'mosquitoalert:anomaly_detection_histories_bites',
           outputFormat: 'application/json',
           viewparams: `feature_id:${props.featureId.split('.')[1]};`
         });
