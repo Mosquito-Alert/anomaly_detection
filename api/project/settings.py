@@ -2,18 +2,19 @@
 Django 5.2 settings for the Bites Anomaly Detection project.
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# GENERAL
+# * GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-SECRET_KEY = 'django-insecure-*f6)7of@z^7@dsw)-846+3(==8r9o7qhby_z5o^s4+=om2-jwe'  # TODO: Environment variable
+SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key")
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = True  # TODO: Environment variable
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
@@ -26,7 +27,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# APPS
+# * APPS
 # ------------------------------------------------------------------------------
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -44,12 +45,13 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    "anomaly_detection.utils",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 
-# MIDDLEWARE
+# * MIDDLEWARE
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
@@ -63,7 +65,7 @@ MIDDLEWARE = [
 ]
 
 
-# DATABASES
+# * DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
@@ -76,7 +78,7 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# URLS
+# * URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
 ROOT_URLCONF = 'project.urls'
@@ -84,7 +86,7 @@ ROOT_URLCONF = 'project.urls'
 WSGI_APPLICATION = 'project.wsgi.application'
 
 
-# TEMPLATES
+# * TEMPLATES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#templates
 TEMPLATES = [
@@ -103,7 +105,7 @@ TEMPLATES = [
 ]
 
 
-# AUTHENTICATION & PASSWORDS
+# * AUTHENTICATION & PASSWORDS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -122,13 +124,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# STATIC
+# * STATIC
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = 'static/'
 
 
-# API Settings
+# * API Settings
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
