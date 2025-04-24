@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: ./api
+      args:
+        - DEV=true
+    image: mosquito-alert/anomaly-detection-local-api
+    container_name: anomaly-detection-local-api
+    hostname: api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/usr/app
+    # healthcheck:
+    #   test: "curl -f http://localhost:8000/ping/ || exit 1"
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 10s
+    # depends_on:
+    #   - db
