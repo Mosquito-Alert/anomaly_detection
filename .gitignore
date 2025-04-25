@@ -1,6 +1,10 @@
 *.csv
 *.gpkg
 venv/
+*/data/input/bites/*
+*/data/input/geo/*
+*/data/output/*
+!*/data/**/.gitkeep
 
 jupyterlab.pid
 lineas_limite/
