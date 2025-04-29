@@ -1,4 +1,3 @@
-.envs
 .editorconfig
 .gitattributes
 .github
@@ -9,3 +8,5 @@
 .readthedocs.yml
 .travis.yml
 venv
+.git
+.envs/

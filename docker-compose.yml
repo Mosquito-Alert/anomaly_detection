@@ -24,7 +24,7 @@ services:
       - db
 
   db:
-    image: postgis/postgis:17-3.5
+    image: postgis/postgis:17-3.5 # 12.3. # TODO: Downgrade a Postgres 15
     container_name: anomaly-detection-local-db
     hostname: db
     volumes:
