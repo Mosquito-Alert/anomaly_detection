@@ -6,6 +6,8 @@ venv/
 */data/output/*
 !*/data/**/.gitkeep
 
+.vscode
+
 jupyterlab.pid
 lineas_limite/
 lineas_limite.zip

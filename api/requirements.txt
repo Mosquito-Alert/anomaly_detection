@@ -2,3 +2,5 @@ Django>=5.2,<5.3
 djangorestframework>=3.16.0,<3.17
 psycopg[c]>=3.2.6,<3.3
 drf-spectacular>=0.28.0,<0.29
+pytest>=8.3.5,<8.4
+pytest-django>=4.11.1,<4.12

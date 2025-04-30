@@ -14,7 +14,7 @@ from django.test import SimpleTestCase
 
 # Mock the "check" method used in the Command class of
 # the wait_for_db command.
-@patch("utils.management.commands.wait_for_db.Command.check")
+@patch("anomaly_detection.utils.management.commands.wait_for_db.Command.check")
 class CommandTest(SimpleTestCase):
     """Test commands."""
 
