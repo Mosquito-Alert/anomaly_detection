@@ -1,7 +1,6 @@
 FROM python:3.13.3-slim-bookworm
 
-# TODO: Put the work email here
-LABEL maintainer=""
+LABEL maintainer="guillermo.sanz@ceab.csic.es"
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE 1

@@ -1,63 +1,55 @@
 from django.contrib.gis.db import models
 
 
-class Municipality(models.Model):
+class AbstractRegion(models.Model):
     """
-    Model to store the municipality data.
+    Abstract model to store the region data.
     """
     code = models.CharField(max_length=32, unique=True)
     name = models.CharField(max_length=255)
     alt_name = models.CharField(max_length=255, blank=True, null=True)
     geometry = models.MultiPolygonField()
 
-    province = models.ForeignKey('Province', on_delete=models.CASCADE, related_name='municipalities')
-
     def __str__(self):
         return self.name
 
     class Meta:
+        abstract = True
         ordering = ['code']
         indexes = [
             models.Index(fields=['name'])
         ]
+
+
+class Municipality(AbstractRegion):
+    """
+    Model to store the municipality data.
+    """
+    province = models.ForeignKey('Province', on_delete=models.CASCADE, related_name='municipalities')
+
+    class Meta(AbstractRegion.Meta):
         verbose_name = 'Municipality'
         verbose_name_plural = 'Municipalities'
 
 
-class Province(models.Model):
+class Province(AbstractRegion):
     """
     Model to store the province data.
     """
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255)
-    alt_name = models.CharField(max_length=255, blank=True, null=True)
-    geometry = models.MultiPolygonField()
-
     autonomous_community = models.ForeignKey('AutonomousCommunity', on_delete=models.CASCADE, related_name='provinces')
 
-    def __str__(self):
-        return self.name
-
-    class Meta:
+    class Meta(AbstractRegion.Meta):
         verbose_name = 'Province'
         verbose_name_plural = 'Provinces'
 
 
-class AutonomousCommunity(models.Model):
+class AutonomousCommunity(AbstractRegion):
     """
     Model to store the autonomous community data.
     """
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255)
-    alt_name = models.CharField(max_length=255, blank=True, null=True)
-    geometry = models.MultiPolygonField()
-
     country = models.ForeignKey('Country', on_delete=models.CASCADE, related_name='autonomous_communities')
 
-    def __str__(self):
-        return self.name
-
-    class Meta:
+    class Meta(AbstractRegion.Meta):
         verbose_name = 'Autonomous Community'
         verbose_name_plural = 'Autonomous Communities'
 
