@@ -73,6 +73,7 @@ class TestGeometryModel:
         """Test the creation of a Geometry instance."""
         assert isinstance(geometry, Geometry)
         assert geometry.geometry == multipolygon
+        assert geometry.geometry.srid == 4326
 
 
 @pytest.mark.django_db
