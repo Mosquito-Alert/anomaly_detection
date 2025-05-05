@@ -1,5 +1,7 @@
 from django.contrib.gis.db import models
 
+from .managers import RegionManager
+
 
 class AbstractRegion(models.Model):
     """
@@ -9,6 +11,9 @@ class AbstractRegion(models.Model):
     name = models.CharField(max_length=255)
     alt_name = models.CharField(max_length=255, blank=True, null=True)
     geometry = models.MultiPolygonField()
+
+    # Manager
+    objects = RegionManager()
 
     def __str__(self):
         return self.name
