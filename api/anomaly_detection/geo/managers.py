@@ -11,7 +11,6 @@ class RegionManager(Manager):
         Override the default queryset to return the results without the geometry field.
         This is useful for performance reasons when the geometry field is not needed.
         """
-        # return RegionQuerySet(self.model, using=self._db).defer('geometry')
         return super().get_queryset().defer('geometry')
 
     def with_geometry(self):

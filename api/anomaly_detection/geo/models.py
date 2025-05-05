@@ -26,39 +26,6 @@ class AbstractRegion(models.Model):
         ]
 
 
-class Municipality(AbstractRegion):
-    """
-    Model to store the municipality data.
-    """
-    province = models.ForeignKey('Province', on_delete=models.CASCADE, related_name='municipalities')
-
-    class Meta(AbstractRegion.Meta):
-        verbose_name = 'Municipality'
-        verbose_name_plural = 'Municipalities'
-
-
-class Province(AbstractRegion):
-    """
-    Model to store the province data.
-    """
-    autonomous_community = models.ForeignKey('AutonomousCommunity', on_delete=models.CASCADE, related_name='provinces')
-
-    class Meta(AbstractRegion.Meta):
-        verbose_name = 'Province'
-        verbose_name_plural = 'Provinces'
-
-
-class AutonomousCommunity(AbstractRegion):
-    """
-    Model to store the autonomous community data.
-    """
-    country = models.ForeignKey('Country', on_delete=models.CASCADE, related_name='autonomous_communities')
-
-    class Meta(AbstractRegion.Meta):
-        verbose_name = 'Autonomous Community'
-        verbose_name_plural = 'Autonomous Communities'
-
-
 class Country(models.Model):
     """
     Model to store the country data.
@@ -74,3 +41,36 @@ class Country(models.Model):
     class Meta:
         verbose_name = 'Country'
         verbose_name_plural = 'Countries'
+
+
+class AutonomousCommunity(AbstractRegion):
+    """
+    Model to store the autonomous community data.
+    """
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='autonomous_communities')
+
+    class Meta(AbstractRegion.Meta):
+        verbose_name = 'Autonomous Community'
+        verbose_name_plural = 'Autonomous Communities'
+
+
+class Province(AbstractRegion):
+    """
+    Model to store the province data.
+    """
+    autonomous_community = models.ForeignKey(AutonomousCommunity, on_delete=models.CASCADE, related_name='provinces')
+
+    class Meta(AbstractRegion.Meta):
+        verbose_name = 'Province'
+        verbose_name_plural = 'Provinces'
+
+
+class Municipality(AbstractRegion):
+    """
+    Model to store the municipality data.
+    """
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name='municipalities')
+
+    class Meta(AbstractRegion.Meta):
+        verbose_name = 'Municipality'
+        verbose_name_plural = 'Municipalities'
