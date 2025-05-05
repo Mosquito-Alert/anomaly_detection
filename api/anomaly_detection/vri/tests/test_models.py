@@ -49,6 +49,7 @@ def municipality(multipolygon):
     )
 
 
+# TODO: Use factory_boy
 @pytest.fixture
 def vris(municipality):
     """Fixture to create a VRI instance."""

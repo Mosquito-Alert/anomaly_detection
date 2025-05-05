@@ -21,6 +21,7 @@ class VRI(models.Model):
     predicted_value = models.FloatField()
     lower_value = models.FloatField()
     upper_value = models.FloatField()
+    # TODO: These two fields should be determined with the previous values: GeneratedField
     is_anomaly = models.BooleanField(default=False)
     importance = models.FloatField()
 
