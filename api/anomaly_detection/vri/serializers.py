@@ -21,3 +21,5 @@ class VRISeasonalitySerializer(ModelSerializer):
         model = VRISeasonality
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
+
+    # TODO: Return the region instance instead of the region id

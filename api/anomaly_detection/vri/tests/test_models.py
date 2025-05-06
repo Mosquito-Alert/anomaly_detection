@@ -1,102 +1,9 @@
 import pytest
 from django.conf import settings
-from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.db import connection, reset_queries
 
-from anomaly_detection.geo.models import (AutonomousCommunity, Country,
-                                          Municipality, Province)
+from anomaly_detection.geo.models import Municipality
 from anomaly_detection.vri.models import VRI, VRISeasonality
-
-
-@pytest.fixture
-def multipolygon():
-    """Fixture to create a MultiPolygon instance."""
-    # Create a MultiPolygon instance with one polygon
-    polygon = Polygon(((0, 0), (1, 1), (1, 0), (0, 0)))
-    multipolygon = MultiPolygon(polygon)
-    return multipolygon
-
-
-@pytest.fixture
-def municipality(multipolygon):
-    """Fixture to create a Municipality instance."""
-    country = Country.objects.create(
-        code='ESP',
-        name='Spain',
-        alt_name='Espana',
-        continent='Europe',
-    )
-    autonomous_community = AutonomousCommunity.objects.create(
-        code='ESP.1_1',
-        name='Test Autonomous Community',
-        alt_name='Test Alt Name',
-        country=country,
-        geometry=multipolygon
-    )
-    province = Province.objects.create(
-        code='ESP.1.1_1',
-        name='Test Province',
-        alt_name='Test Alt Name',
-        autonomous_community=autonomous_community,
-        geometry=multipolygon
-    )
-    return Municipality.objects.create(
-        code='ESP.1.1.1.1_1',
-        name='Test Municipality',
-        alt_name='Test Alt Name',
-        province=province,
-        geometry=multipolygon
-    )
-
-
-# TODO: Use factory_boy
-@pytest.fixture
-def vris(municipality):
-    """Fixture to create a VRI instance."""
-    vri1 = VRI.objects.create(
-        region=municipality,
-        date='2023-01-01',
-        actual_value=0.8,
-        predicted_value=0.85,
-        lower_value=0.5,
-        upper_value=1.0,
-        trend=0.1,
-    )
-    vri2 = VRI.objects.create(
-        region=municipality,
-        date='2023-01-02',
-        actual_value=0.9,
-        predicted_value=0.75,
-        lower_value=0.6,
-        upper_value=0.8,
-        trend=0.2,
-    )
-    vri3 = VRI.objects.create(
-        region=municipality,
-        date='2023-01-03',
-        actual_value=0.4,
-        predicted_value=0.75,
-        lower_value=0.5,
-        upper_value=0.9,
-        trend=0.3,
-    )
-    return vri1, vri2, vri3
-
-
-@pytest.fixture
-def seasonalities(municipality):
-    """Fixture to create a VRISeasonality instance."""
-    seasonality1 = VRISeasonality.objects.create(
-        region=municipality,
-        index=0,
-        yearly_value=0.5
-    )
-    seasonality2 = VRISeasonality.objects.create(
-        region=municipality,
-        index=1,
-        yearly_value=0.6
-    )
-    return seasonality1, seasonality2
 
 
 @pytest.mark.django_db
@@ -109,17 +16,18 @@ class TestVRIModel:
         """
         Test the creation of a VRI instance.
         """
-        vri1, vri2, vri3 = vris
+        municipality1, _ = municipality
+        vri1, vri2, _, _ = vris
         assert isinstance(vri1, VRI)
         assert vri1.region.code == 'ESP.1.1.1.1_1'
         assert vri2.date == '2023-01-02'
-        assert vri1.region == municipality
+        assert vri1.region == municipality1
 
     def test_vri_str(self, vris):
         """
         Test the string representation of a VRI instance.
         """
-        vri1, _, _ = vris
+        vri1, _, _, _ = vris
         assert str(vri1) == f"VRI for {vri1.region.name} on {vri1.date}: {vri1.actual_value}"
 
     def test_vri_meta(self):
@@ -137,7 +45,7 @@ class TestVRIModel:
         """
         Test the anomaly degree calculation.
         """
-        vri1, vri2, vri3 = vris
+        vri1, vri2, vri3, _ = vris
         assert vri2.anomaly_degree is not None
         assert isinstance(vri2.anomaly_degree, float)
         assert vri1.anomaly_degree == 0.0
@@ -148,7 +56,7 @@ class TestVRIModel:
         """
         Test the region field of the VRI model.
         """
-        vri1, _, _ = vris
+        vri1, _, _, _ = vris
         assert vri1.region is not None
         assert isinstance(vri1.region, Municipality)
         assert vri1.region.code == 'ESP.1.1.1.1_1'
@@ -205,11 +113,12 @@ class TestVRISeasonalityModel:
         """
         Test the creation of a VRISeasonality instance.
         """
+        municipality1, _ = municipality
         seasonality1, seasonality2 = seasonalities
         assert isinstance(seasonality1, VRISeasonality)
         assert seasonality1.region.code == 'ESP.1.1.1.1_1'
         assert seasonality2.yearly_value == 0.6
-        assert seasonality1.region == municipality
+        assert seasonality1.region == municipality1
 
     def test_vri_seasonality_str(self, seasonalities):
         """
