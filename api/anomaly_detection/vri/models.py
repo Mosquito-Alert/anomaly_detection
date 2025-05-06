@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Case, F, Value, When
 
 from anomaly_detection.geo.models import Municipality
 from anomaly_detection.vri.managers import RegionSelectedManager
@@ -22,9 +23,21 @@ class VRI(models.Model):
     lower_value = models.FloatField()
     upper_value = models.FloatField()
     trend = models.FloatField()
-    # TODO: These two fields should be determined with the previous values: GeneratedField
-    is_anomaly = models.BooleanField(default=False)
-    importance = models.FloatField()
+
+    anomaly_degree = models.GeneratedField(
+        expression=Case(
+            When(actual_value__gt=F('upper_value'),
+                 then=(F('actual_value') - F('upper_value')) / F('actual_value')),
+            When(actual_value__lt=F('lower_value'),
+                 then=(F('actual_value') - F('lower_value')) / F('actual_value')),
+            default=Value(0.0),
+            output_field=models.FloatField(),
+        ),
+        output_field=models.FloatField(),
+        # If db_persist is set to false, then the field will not be persisted in the database
+        # and the computed value will be calculated on the READ queries, which is not optimal.
+        db_persist=True,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

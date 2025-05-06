@@ -43,21 +43,15 @@ class Command(BaseCommand):
             'yhat': 'predicted_value',
             'yhat_lower': 'lower_value',
             'yhat_upper': 'upper_value',
-            'anomaly': 'is_anomaly',
         }, inplace=True)
         # Convert date column to datetime
         vri_data['date'] = pd.to_datetime(vri_data['date'])
-        # Multiply importance by anomaly
-        vri_data['importance'] = vri_data['importance'] * vri_data['is_anomaly']
-        # Conver is_anomaly to boolean
-        vri_data['is_anomaly'] = vri_data['is_anomaly'].astype(bool)
         # Conver all numeric columns to float
         vri_data['actual_value'] = vri_data['actual_value'].astype(float)
         vri_data['predicted_value'] = vri_data['predicted_value'].astype(float)
         vri_data['lower_value'] = vri_data['lower_value'].astype(float)
         vri_data['upper_value'] = vri_data['upper_value'].astype(float)
         vri_data['trend'] = vri_data['trend'].astype(float)
-        vri_data['importance'] = vri_data['importance'].astype(float)
         # Convert code to string and upper case
         vri_data['code'] = vri_data['code'].astype(str).str.upper()
         return vri_data
@@ -90,8 +84,6 @@ class Command(BaseCommand):
                         lower_value=row['lower_value'],
                         upper_value=row['upper_value'],
                         trend=row['trend'],
-                        is_anomaly=row['is_anomaly'],
-                        importance=row['importance'],
                     )
                 except Municipality.DoesNotExist:
                     self.stderr.write(self.style.ERROR(f"Municipality with code {row['code']} does not exist."))
