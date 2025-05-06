@@ -21,6 +21,7 @@ class VRI(models.Model):
     predicted_value = models.FloatField()
     lower_value = models.FloatField()
     upper_value = models.FloatField()
+    trend = models.FloatField()
     # TODO: These two fields should be determined with the previous values: GeneratedField
     is_anomaly = models.BooleanField(default=False)
     importance = models.FloatField()
@@ -52,9 +53,10 @@ class VRISeasonality(models.Model):
         Municipality,
         on_delete=models.CASCADE,
         related_name='seasonalities',
-        unique_for_date='date'
+        # unique_for_date='date'
     )
-    date = models.DateField()
+    # date = models.DateField()
+    index = models.SmallIntegerField()
     yearly_value = models.FloatField()
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -63,12 +65,12 @@ class VRISeasonality(models.Model):
     objects = RegionSelectedManager()
 
     def __str__(self):
-        return f"VRI Seasonality for {self.region.name} on {self.date}: {self.yearly_value}"
+        return f"VRI Seasonality for {self.region.name} on day {self.index+1}: {self.yearly_value}"
 
     class Meta:
-        ordering = ['date']
+        ordering = ['index']
         indexes = [
-            models.Index(fields=['date']),
+            models.Index(fields=['index']),
         ]
         verbose_name = 'VRI Seasonality'
         verbose_name_plural = 'VRI Seasonalities'
