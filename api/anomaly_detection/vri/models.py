@@ -48,7 +48,7 @@ class VRI(models.Model):
         return f"VRI for {self.region.name} on {self.date}: {self.actual_value}"
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['region', '-date']
         indexes = [
             models.Index(fields=['date']),
             models.Index(fields=['region', 'date'])
@@ -81,7 +81,7 @@ class VRISeasonality(models.Model):
         return f"VRI Seasonality for {self.region.name} on day {self.index+1}: {self.yearly_value}"
 
     class Meta:
-        ordering = ['index']
+        ordering = ['region', 'index']
         indexes = [
             models.Index(fields=['index']),
         ]

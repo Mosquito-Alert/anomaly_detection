@@ -60,8 +60,7 @@ def vris(municipality):
         predicted_value=0.85,
         lower_value=0.5,
         upper_value=1.0,
-        is_anomaly=False,
-        importance=0
+        trend=0.1,
     )
     vri2 = VRI.objects.create(
         region=municipality,
@@ -70,8 +69,7 @@ def vris(municipality):
         predicted_value=0.75,
         lower_value=0.6,
         upper_value=0.8,
-        is_anomaly=True,
-        importance=0.5
+        trend=0.2,
     )
     vri3 = VRI.objects.create(
         region=municipality,
@@ -80,8 +78,7 @@ def vris(municipality):
         predicted_value=0.75,
         lower_value=0.5,
         upper_value=0.9,
-        is_anomaly=True,
-        importance=-0.6
+        trend=0.3,
     )
     return vri1, vri2, vri3
 
@@ -91,12 +88,12 @@ def seasonalities(municipality):
     """Fixture to create a VRISeasonality instance."""
     seasonality1 = VRISeasonality.objects.create(
         region=municipality,
-        date='2023-01-01',
+        index=0,
         yearly_value=0.5
     )
     seasonality2 = VRISeasonality.objects.create(
         region=municipality,
-        date='2023-01-02',
+        index=1,
         yearly_value=0.6
     )
     return seasonality1, seasonality2
@@ -116,7 +113,6 @@ class TestVRIModel:
         assert isinstance(vri1, VRI)
         assert vri1.region.code == 'ESP.1.1.1.1_1'
         assert vri2.date == '2023-01-02'
-        assert vri3.is_anomaly is True
         assert vri1.region == municipality
 
     def test_vri_str(self, vris):
@@ -132,10 +128,21 @@ class TestVRIModel:
         """
         assert VRI._meta.verbose_name == 'Vector Risk Index'
         assert VRI._meta.verbose_name_plural == 'Vector Risk Indexes'
-        assert VRI._meta.ordering == ['-date']
+        assert VRI._meta.ordering == ['region', '-date']
         assert VRI._meta.indexes[0].fields == ['date']
         assert VRI._meta.indexes[1].fields == ['region', 'date']
         assert VRI._meta.unique_together is not None
+
+    def test_vri_anomaly_degree(self, vris):
+        """
+        Test the anomaly degree calculation.
+        """
+        vri1, vri2, vri3 = vris
+        assert vri2.anomaly_degree is not None
+        assert isinstance(vri2.anomaly_degree, float)
+        assert vri1.anomaly_degree == 0.0
+        assert vri2.anomaly_degree == (vri2.actual_value - vri2.upper_value) / vri2.actual_value
+        assert vri3.anomaly_degree == (vri3.actual_value - vri3.lower_value) / vri3.actual_value
 
     def test_vri_region(self, vris, multipolygon):
         """
@@ -211,7 +218,7 @@ class TestVRISeasonalityModel:
         seasonality1, _ = seasonalities
         assert str(
             seasonality1) == (
-                f"VRI Seasonality for {seasonality1.region.name} on {seasonality1.date}: "
+                f"VRI Seasonality for {seasonality1.region.name} on day {seasonality1.index + 1}: "
                 f"{seasonality1.yearly_value}"
         )
 
@@ -221,8 +228,8 @@ class TestVRISeasonalityModel:
         """
         assert VRISeasonality._meta.verbose_name == 'VRI Seasonality'
         assert VRISeasonality._meta.verbose_name_plural == 'VRI Seasonalities'
-        assert VRISeasonality._meta.ordering == ['date']
-        assert VRISeasonality._meta.indexes[0].fields == ['date']
+        assert VRISeasonality._meta.ordering == ['region', 'index']
+        assert VRISeasonality._meta.indexes[0].fields == ['index']
         assert VRISeasonality._meta.unique_together is not None
 
     def test_vri_seasonality_region(self, seasonalities, multipolygon):
