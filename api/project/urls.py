@@ -20,6 +20,8 @@ from drf_spectacular.views import (SpectacularAPIView, SpectacularJSONAPIView,
                                    SpectacularRedocView,
                                    SpectacularSwaggerView)
 
+from project import settings
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/schema/openapi.yml", SpectacularAPIView.as_view(api_version='v1'), name="api-schema"),
@@ -32,3 +34,7 @@ urlpatterns = [
     path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='api-schema'), name='redoc'),
     path('api/', include('anomaly_detection.vri.urls', namespace='vri')),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
