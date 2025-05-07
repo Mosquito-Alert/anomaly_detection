@@ -1,9 +1,20 @@
+from django.conf import settings
+from django.db import reset_queries, connection as db_connection
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from anomaly_detection.geo.models import (AutonomousCommunity, Country,
                                           Municipality, Province)
 from anomaly_detection.vri.models import VRI, VRISeasonality
+
+
+@pytest.fixture
+def connection():
+    """Fixture to reset queries after each test and return the connection."""
+    settings.DEBUG = True
+    # Reset queries to count the number of queries executed
+    reset_queries()
+    return db_connection
 
 
 @pytest.fixture

@@ -1,6 +1,4 @@
 import pytest
-from django.conf import settings
-from django.db import connection, reset_queries
 
 from anomaly_detection.geo.models import Municipality
 from anomaly_detection.vri.models import VRI, VRISeasonality
@@ -63,14 +61,10 @@ class TestVRIModel:
         assert vri1.region.name == 'Test Municipality'
         assert vri1.region.geometry == multipolygon
 
-    def test_vri_region_geometry_deferred_by_default(self, vris):
+    def test_vri_region_geometry_deferred_by_default(self, vris, connection):
         """
         Test that the geometry field is deferred by default.
         """
-        settings.DEBUG = True  # Enable DEBUG mode for testing
-        # Reset queries to count the number of queries executed
-        reset_queries()
-
         # Get the first VRI instance
         vri1 = VRI.objects.first()
 
@@ -85,13 +79,10 @@ class TestVRIModel:
         assert queries_after_region == 1
         assert queries_after_geometry == 2
 
-    def test_vri_region_with_geometry(self, vris):
+    def test_vri_region_with_geometry(self, vris, connection):
         """
         Test that the region field with geometry is not deferred.
         """
-        settings.DEBUG = True  # Enable DEBUG mode for testing
-        # Reset queries to count the number of queries executed
-        reset_queries()
 
         # Get the first VRI instance
         vri1 = VRI.objects.with_geometry().first()
@@ -152,15 +143,10 @@ class TestVRISeasonalityModel:
         assert seasonality1.region.name == 'Test Municipality'
         assert seasonality1.region.geometry == multipolygon
 
-    def test_vri_seasonality_region_geometry_deferred_by_default(self, seasonalities):
+    def test_vri_seasonality_region_geometry_deferred_by_default(self, seasonalities, connection):
         """
         Test that the geometry field is deferred by default.
         """
-        settings.DEBUG = True
-
-        # Reset queries to count the number of queries executed
-        reset_queries()
-
         # Get the first VRISeasonality instance
         seasonality1 = VRISeasonality.objects.first()
 
@@ -175,15 +161,10 @@ class TestVRISeasonalityModel:
         assert queries_after_region == 1
         assert queries_after_geometry == 2
 
-    def test_vri_seasonality_region_with_geometry(self, seasonalities):
+    def test_vri_seasonality_region_with_geometry(self, seasonalities, connection):
         """
         Test that the region field with geometry is not deferred.
         """
-        settings.DEBUG = True
-
-        # Reset queries to count the number of queries executed
-        reset_queries()
-
         # Get the first VRISeasonality instance
         seasonality1 = VRISeasonality.objects.with_geometry().first()
 
