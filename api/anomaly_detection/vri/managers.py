@@ -1,4 +1,6 @@
-from django.db.models import Manager
+from django.db.models import Manager, Prefetch
+
+from anomaly_detection.geo.models import Municipality
 
 
 class RegionSelectedManager(Manager):
@@ -20,4 +22,6 @@ class RegionSelectedManager(Manager):
         Return the queryset with the geometry field included.
         This is useful for when you need to access the geometry data.
         """
-        return super().get_queryset().select_related('region')
+        return super().get_queryset().select_related('region').prefetch_related(
+            Prefetch('region', queryset=Municipality.objects.with_geometry())  # .filter(pk=OuterRef('region'))
+        )

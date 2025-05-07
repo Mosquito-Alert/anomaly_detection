@@ -1,6 +1,6 @@
 
 
-from django.db.models import Max
+from enum import Enum
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework.mixins import ListModelMixin
@@ -10,15 +10,22 @@ from anomaly_detection.vri.models import VRI
 from anomaly_detection.vri.serializers import VRISerializer, VRIWithGeometrySerializer
 
 
+class FormatEnum(str, Enum):
+    JSON = "JSON"
+    GEOJSON = "GEOJSON"
+
+
 @extend_schema_view(
     list=extend_schema(
         parameters=[
             OpenApiParameter(
-                name='geometry',
-                type=OpenApiTypes.BOOL,
-                description='Determine if the response should include geometry data.',
+                name='response_format',
+                type=OpenApiTypes.STR,
+                enum=[format.value for format in FormatEnum],
+                description='Determines the format of the response.',
                 required=False,
-                default=False,
+                default=FormatEnum.JSON.value,
+                location=OpenApiParameter.QUERY
             )
         ]
     )
@@ -38,17 +45,16 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
         queryset = super().get_queryset()
 
         # Query parameters
-        geometry = self.request.query_params.get('geometry')  # TODO: Change it to format: json/geojson
+        format = self.request.query_params.get('response_format')
 
-        if geometry == "true":
+        if format == FormatEnum.GEOJSON:
             queryset = queryset.with_geometry().all()
         else:
             queryset = queryset.all()
 
         if self.action == 'list':
             # Get the most recent date in the queryset
-            # TODO: queryset.latest('-date')
-            latest_date = queryset.aggregate(latest=Max('date'))['latest']
+            latest_date = queryset.latest('date').date
             if latest_date:
                 # Filter the queryset to include only the latest date
                 queryset = queryset.filter(date=latest_date)
@@ -61,9 +67,9 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
         Override the get_serializer_class method to return the appropriate
         serializer class based on the method action and the request parameters.
         """
-        geometry = self.request.query_params.get('geometry')
+        format = self.request.query_params.get('response_format')
 
-        if geometry == "true":
+        if format == FormatEnum.GEOJSON:
             return VRIWithGeometrySerializer
         return super().get_serializer_class()
 

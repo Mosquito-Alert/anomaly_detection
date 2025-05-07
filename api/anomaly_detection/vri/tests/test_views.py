@@ -64,7 +64,7 @@ class TestVRIListView:
         """
         Retrieve the list of VRI instances with geometry.
         """
-        res = client.get(VRI_URL, {'geometry': 'true'})
+        res = client.get(VRI_URL, {'response_format': 'GEOJSON'})
 
         vris_from_db = VRI.objects.with_geometry().all().filter(date=vris[3].date)
         serialized = VRIWithGeometrySerializer(vris_from_db, many=True)
@@ -78,7 +78,7 @@ class TestVRIListView:
         """
         Retrieve the list of VRI instances with geometry and check the number of queries executed
         """
-        res = client.get(VRI_URL, {'geometry': 'true'})
+        res = client.get(VRI_URL, {'response_format': 'GEOJSON'})
 
         assert res.status_code == status.HTTP_200_OK
         # Check that only 2 queries are executed (1 for getting the latest date

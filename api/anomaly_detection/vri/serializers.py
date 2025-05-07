@@ -13,8 +13,8 @@ class VRISerializer(ModelSerializer):
 
     class Meta:
         model = VRI
-        # TODO: Explicity set the fields to be included in the serializer
-        fields = '__all__'
+        fields = ['id', 'date', 'actual_value', 'predicted_value', 'lower_value', 'upper_value',
+                  'trend', 'anomaly_degree', 'region']
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
@@ -31,6 +31,5 @@ class VRISeasonalitySerializer(ModelSerializer):
     """
     class Meta:
         model = VRISeasonality
-        # TODO: Explicity set the fields to be included in the serializer
-        fields = '__all__'
+        fields = ['id', 'index', 'yearly_value', 'region']
         read_only_fields = ['created_at', 'updated_at']

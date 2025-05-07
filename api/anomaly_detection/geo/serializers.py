@@ -9,8 +9,7 @@ class MunicipalitySerializer(ModelSerializer):
     """
     class Meta:
         model = Municipality
-        # TODO: Explicity set the fields to be included in the serializer
-        exclude = ['geometry']
+        fields = ['id', 'code', 'name', 'alt_name', 'province']  # exclude geometry
 
 
 class MunicipalityWithGeometrySerializer(ModelSerializer):
@@ -20,5 +19,4 @@ class MunicipalityWithGeometrySerializer(ModelSerializer):
 
     class Meta:
         model = Municipality
-        # TODO: Explicity set the fields to be included in the serializer
-        fields = '__all__'
+        fields = ['id', 'code', 'name', 'alt_name', 'province', 'geometry']
