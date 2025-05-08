@@ -1,6 +1,8 @@
 from rest_framework.serializers import ModelSerializer
+from rest_framework_gis.fields import GeometryField
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from anomaly_detection.geo.serializers import MunicipalitySerializer, MunicipalityWithGeometrySerializer
+from anomaly_detection.geo.serializers import MunicipalitySerializer, MunicipalitySimplifiedSerializer
 
 from .models import VRI, VRISeasonality
 
@@ -18,11 +20,22 @@ class VRISerializer(ModelSerializer):
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
-class VRIWithGeometrySerializer(VRISerializer):
+class GeoVRISerializer(GeoFeatureModelSerializer):
     """
     Serializer for the Vector Risk Index model.
     """
-    region = MunicipalityWithGeometrySerializer()
+    region = MunicipalitySimplifiedSerializer()
+    geometry = GeometryField(
+        source='region.geometry',
+        read_only=True
+    )
+
+    class Meta:
+        model = VRI
+        geo_field = "geometry"  # Use the geometry field from the related region
+
+        fields = ['id', 'anomaly_degree', 'region']
+        read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
 class VRISeasonalitySerializer(ModelSerializer):

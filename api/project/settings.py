@@ -43,6 +43,7 @@ THIRD_PARTY_APPS = [
     'silk',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_gis',
     'drf_spectacular',
 ]
 

@@ -6,7 +6,7 @@ from rest_framework import status
 
 from anomaly_detection.vri.models import VRI
 from anomaly_detection.vri.serializers import (VRISerializer,
-                                               VRIWithGeometrySerializer)
+                                               GeoVRISerializer)
 
 VRI_URL = reverse('vri:vri-list')
 
@@ -42,7 +42,7 @@ class TestVRIListView:
         assert res.data[1]['actual_value'] == vris[3].actual_value
         assert res.data == serialized.data
         # Check that the region is not serialized with geometry
-        assert res.data[1]['region'].get('actual_value') is None
+        assert res.data[1]['region'].get('geometry') is None
 
     def test_retrieve_vri_list_number_of_queries(self, vris, client, connection):
         """
@@ -58,8 +58,6 @@ class TestVRIListView:
         _ = res.data[1]['region']['name']
         assert len(self._get_queries(connection)) == 2
 
-    # TODO: Check format GEOJSON or JSON
-
     def test_retrieve_vri_list_with_geometry(self, vris, client):
         """
         Retrieve the list of VRI instances with geometry.
@@ -67,11 +65,29 @@ class TestVRIListView:
         res = client.get(VRI_URL, {'response_format': 'GEOJSON'})
 
         vris_from_db = VRI.objects.with_geometry().all().filter(date=vris[3].date)
-        serialized = VRIWithGeometrySerializer(vris_from_db, many=True)
+        serialized = GeoVRISerializer(vris_from_db, many=True)
+
         assert res.status_code == status.HTTP_200_OK
-        assert len(res.data) == 2
-        assert res.data[1]['actual_value'] == vris[3].actual_value
-        assert res.data[1]['region']['geometry'] is not None
+
+        # Check that the response is in GEOJSON format
+        assert 'features' in res.data
+
+        # Check the data
+        res_data = res.data['features']
+        assert len(res_data) == 2
+        assert res_data[1]['properties']['anomaly_degree'] == vris[3].anomaly_degree
+        assert res_data[1]['properties']['region']['code'] == vris[3].region.code
+
+        # Check that the region is not serialized with geometry or other optional fields
+        assert res_data[1]['properties']['region'].get('geometry') is None
+        assert res_data[1]['properties']['region'].get('alt_name') is None
+
+        # Check the geometry
+        assert 'geometry' in res_data[1]
+        assert res_data[1]['geometry']['type'] == 'MultiPolygon'
+        assert res_data[1]['geometry']['coordinates'] is not None  # TODO: Maybe check the coordinates
+
+        # Final check with the serialized data
         assert res.data == serialized.data
 
     def test_retrieve_vri_list_with_geometry_number_of_queries(self, vris, client, connection):
@@ -83,6 +99,7 @@ class TestVRIListView:
         assert res.status_code == status.HTTP_200_OK
         # Check that only 2 queries are executed (1 for getting the latest date
         # and 1 for getting the VRI instances with the region joined)
-        _ = res.data[1]['actual_value']
-        _ = res.data[1]['region']['geometry']
+        _ = res.data['features'][1]['properties']['anomaly_degree']
+        _ = res.data['features'][1]['properties']['region']['code']
+        _ = res.data['features'][1]['geometry']
         assert len(self._get_queries(connection)) == 2

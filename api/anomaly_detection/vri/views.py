@@ -7,7 +7,7 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.viewsets import GenericViewSet
 
 from anomaly_detection.vri.models import VRI
-from anomaly_detection.vri.serializers import VRISerializer, VRIWithGeometrySerializer
+from anomaly_detection.vri.serializers import GeoVRISerializer, VRISerializer
 
 
 class FormatEnum(str, Enum):
@@ -54,13 +54,12 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
 
         if self.action == 'list':
             # Get the most recent date in the queryset
-            latest_date = queryset.latest('date').date
-            if latest_date:
+            if latest_date := queryset.values('date').order_by('-date').first()['date']:
                 # Filter the queryset to include only the latest date
                 queryset = queryset.filter(date=latest_date)
             else:
                 queryset = queryset.none()
-        return queryset
+        return queryset.order_by()
 
     def get_serializer_class(self):
         """
@@ -70,7 +69,8 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
         format = self.request.query_params.get('response_format')
 
         if format == FormatEnum.GEOJSON:
-            return VRIWithGeometrySerializer
+            # return VRIWithGeometrySerializer
+            return GeoVRISerializer
         return super().get_serializer_class()
 
     # TODO: Query parameters: geometry, level

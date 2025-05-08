@@ -12,11 +12,10 @@ class MunicipalitySerializer(ModelSerializer):
         fields = ['id', 'code', 'name', 'alt_name', 'province']  # exclude geometry
 
 
-class MunicipalityWithGeometrySerializer(ModelSerializer):
+class MunicipalitySimplifiedSerializer(ModelSerializer):
     """
-    Serializer for the Municipality model with geometry.
+    Serializer for the Municipality model with only the fundamental fields.
     """
-
     class Meta:
         model = Municipality
-        fields = ['id', 'code', 'name', 'alt_name', 'province', 'geometry']
+        fields = ['code', 'name']  # exclude geometry
