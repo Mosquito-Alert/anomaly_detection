@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class VriConfig(AppConfig):
+class PredictionsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'anomaly_detection.vri'
+    name = 'anomaly_detection.predictions'

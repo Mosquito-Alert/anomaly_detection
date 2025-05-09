@@ -2,20 +2,21 @@ from django.db import models
 from django.db.models import Case, F, Value, When
 
 from anomaly_detection.geo.models import Municipality
-from anomaly_detection.vri.managers import RegionSelectedManager
+from anomaly_detection.predictions.managers import RegionSelectedManager
 
 
-class VRI(models.Model):
+class Metric(models.Model):
     """
-    Model to store the Vector Risk Index data.
+    Model to store a metric of data, such as a Bites Index.
     """
     # TODO: Use ContentType and GenericRelation for region field
     region = models.ForeignKey(
         Municipality,
         on_delete=models.CASCADE,
-        related_name='historical_vri',
+        related_name='metrics',
         unique_for_date='date'
     )
+    # TODO: type. A foreign key to a model MetricType
 
     date = models.DateField()
     actual_value = models.FloatField()
@@ -45,7 +46,7 @@ class VRI(models.Model):
     objects = RegionSelectedManager()
 
     def __str__(self):
-        return f"VRI for {self.region.name} on {self.date}: {self.actual_value}"
+        return f"Bites Index Metric for {self.region.name} on {self.date}: {self.actual_value}"
 
     class Meta:
         ordering = ['region', '-date']
@@ -54,13 +55,13 @@ class VRI(models.Model):
             models.Index(fields=['region', 'date'])
         ]
         unique_together = ('region', 'date',)
-        verbose_name = 'Vector Risk Index'
-        verbose_name_plural = 'Vector Risk Indexes'
+        verbose_name = 'Metric'
+        verbose_name_plural = 'Metrics'
 
 
-class VRISeasonality(models.Model):
+class MetricSeasonality(models.Model):
     """
-    Model to store the seasonality data for the Vector Risk Index.
+    Model to store the seasonality data for a specific Metric.
     """
     region = models.ForeignKey(
         Municipality,
@@ -78,12 +79,22 @@ class VRISeasonality(models.Model):
     objects = RegionSelectedManager()
 
     def __str__(self):
-        return f"VRI Seasonality for {self.region.name} on day {self.index+1}: {self.yearly_value}"
+        return f"Bites Index Metric Seasonality for {self.region.name} on day {self.index+1}: {self.yearly_value}"
 
     class Meta:
         ordering = ['region', 'index']
         indexes = [
             models.Index(fields=['index']),
         ]
-        verbose_name = 'VRI Seasonality'
-        verbose_name_plural = 'VRI Seasonalities'
+        verbose_name = 'Seasonality for metric'
+        verbose_name_plural = 'Seasonalities for metric'
+
+
+class MetricExecution(models.Model):
+    """
+    Model to store the data prediction execution information.
+    Every time the metrics are updated, a prediction will be executed.
+    """
+    date = models.DateField(unique=True)
+    # Percentage of values successfully predicted and saved.
+    success_percentage = models.FloatField()

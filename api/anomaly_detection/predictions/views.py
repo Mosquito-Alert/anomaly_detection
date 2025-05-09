@@ -5,18 +5,18 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.vri.models import VRI
-from anomaly_detection.vri.serializers import VRISerializer
-from anomaly_detection.vri.vector_layers import VRIMunicipalityVectorLayer
+from anomaly_detection.predictions.models import Metric
+from anomaly_detection.predictions.serializers import MetricSerializer
+from anomaly_detection.predictions.vector_layers import MetricMunicipalityVectorLayer
 
 
-class VRIViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
+class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
     """
-    ViewSet for the Vector Risk Index (VRI) model.
+    ViewSet for Metric model.
     """
-    queryset = VRI.objects
-    serializer_class = VRISerializer
-    layer_classes = [VRIMunicipalityVectorLayer]
+    queryset = Metric.objects
+    serializer_class = MetricSerializer
+    layer_classes = [MetricMunicipalityVectorLayer]
 
     id = "features"
     tile_fields = ('anomaly_degree', )

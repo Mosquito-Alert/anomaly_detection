@@ -32,7 +32,7 @@ urlpatterns = [
         name="swagger-ui"
     ),
     path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='api-schema'), name='redoc'),
-    path('api/', include('anomaly_detection.vri.urls', namespace='vri')),
+    path('api/', include('anomaly_detection.predictions.urls', namespace='predictions')),
     path('api/', include('anomaly_detection.geo.urls', namespace='geo')),
 ]
 

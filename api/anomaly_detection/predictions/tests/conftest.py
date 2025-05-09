@@ -5,7 +5,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from anomaly_detection.geo.models import (AutonomousCommunity, Country,
                                           Municipality, Province)
-from anomaly_detection.vri.models import VRI, VRISeasonality
+from anomaly_detection.predictions.models import Metric, MetricSeasonality
 
 
 @pytest.fixture
@@ -68,10 +68,10 @@ def municipality(multipolygon):
 
 # TODO: Use factory_boy
 @pytest.fixture
-def vris(municipality):
-    """Fixture to create a VRI instance."""
+def metrics(municipality):
+    """Fixture to create a Metric instance."""
     municipality1, municipality2 = municipality
-    vri1 = VRI.objects.create(
+    metric1 = Metric.objects.create(
         region=municipality1,
         date='2023-01-01',
         actual_value=0.8,
@@ -80,7 +80,7 @@ def vris(municipality):
         upper_value=1.0,
         trend=0.1,
     )
-    vri2 = VRI.objects.create(
+    metric2 = Metric.objects.create(
         region=municipality1,
         date='2023-01-02',
         actual_value=0.9,
@@ -89,7 +89,7 @@ def vris(municipality):
         upper_value=0.8,
         trend=0.2,
     )
-    vri3 = VRI.objects.create(
+    metric3 = Metric.objects.create(
         region=municipality1,
         date='2023-01-03',
         actual_value=0.4,
@@ -98,7 +98,7 @@ def vris(municipality):
         upper_value=0.9,
         trend=0.3,
     )
-    vri4 = VRI.objects.create(
+    metric4 = Metric.objects.create(
         region=municipality2,
         date='2023-01-03',
         actual_value=0.7,
@@ -107,19 +107,19 @@ def vris(municipality):
         upper_value=0.9,
         trend=0.1,
     )
-    return vri1, vri2, vri3, vri4
+    return metric1, metric2, metric3, metric4
 
 
 @pytest.fixture
 def seasonalities(municipality):
-    """Fixture to create a VRISeasonality instance."""
+    """Fixture to create a MetricSeasonality instance."""
     municipality1, _ = municipality
-    seasonality1 = VRISeasonality.objects.create(
+    seasonality1 = MetricSeasonality.objects.create(
         region=municipality1,
         index=0,
         yearly_value=0.5
     )
-    seasonality2 = VRISeasonality.objects.create(
+    seasonality2 = MetricSeasonality.objects.create(
         region=municipality1,
         index=1,
         yearly_value=0.6

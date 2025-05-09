@@ -4,25 +4,25 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from anomaly_detection.geo.serializers import MunicipalitySerializer, MunicipalitySimplifiedSerializer
 
-from .models import VRI, VRISeasonality
+from .models import Metric, MetricSeasonality
 
 
-class VRISerializer(ModelSerializer):
+class MetricSerializer(ModelSerializer):
     """
-    Serializer for the Vector Risk Index model.
+    Serializer for the Metrics.
     """
     region = MunicipalitySerializer()
 
     class Meta:
-        model = VRI
+        model = Metric
         fields = ['id', 'date', 'actual_value', 'predicted_value', 'lower_value', 'upper_value',
                   'trend', 'anomaly_degree', 'region']
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
-class GeoVRISerializer(GeoFeatureModelSerializer):
+class GeoMetricSerializer(GeoFeatureModelSerializer):
     """
-    Serializer for the Vector Risk Index model.
+    Serializer for the Metrics.
     """
     region = MunicipalitySimplifiedSerializer()
     geometry = GeometryField(
@@ -31,18 +31,18 @@ class GeoVRISerializer(GeoFeatureModelSerializer):
     )
 
     class Meta:
-        model = VRI
+        model = Metric
         geo_field = "geometry"  # Use the geometry field from the related region
 
         fields = ['id', 'anomaly_degree', 'region']
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
-class VRISeasonalitySerializer(ModelSerializer):
+class MetricSeasonalitySerializer(ModelSerializer):
     """
-    Serializer for the VRI Seasonality model.
+    Serializer for the Metric Seasonality model.
     """
     class Meta:
-        model = VRISeasonality
+        model = MetricSeasonality
         fields = ['id', 'index', 'yearly_value', 'region']
         read_only_fields = ['created_at', 'updated_at']
