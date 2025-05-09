@@ -1,5 +1,3 @@
-
-
 from rest_framework.routers import DefaultRouter
 
 from anomaly_detection.vri import views

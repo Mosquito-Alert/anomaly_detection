@@ -1,4 +1,5 @@
 from rest_framework.serializers import ModelSerializer
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from anomaly_detection.geo.models import Municipality
 
@@ -19,3 +20,13 @@ class MunicipalitySimplifiedSerializer(ModelSerializer):
     class Meta:
         model = Municipality
         fields = ['code', 'name']  # exclude geometry
+
+
+class GeoMunicipalitySerializer(GeoFeatureModelSerializer):
+    """
+    Serializer for the Municipality model with geometry.
+    """
+    class Meta:
+        model = Municipality
+        geo_field = "geometry"
+        fields = ['code', 'name']  # include geometry

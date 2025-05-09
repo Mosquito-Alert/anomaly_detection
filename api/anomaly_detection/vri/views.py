@@ -1,41 +1,32 @@
-
-
-from enum import Enum
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from vectortiles.mixins import BaseVectorTileView
+from vectortiles.rest_framework.renderers import MVTRenderer
 
 from anomaly_detection.vri.models import VRI
-from anomaly_detection.vri.serializers import GeoVRISerializer, VRISerializer
+from anomaly_detection.vri.serializers import VRISerializer
+from anomaly_detection.vri.vector_layers import VRIMunicipalityVectorLayer
 
 
-class FormatEnum(str, Enum):
-    JSON = "JSON"
-    GEOJSON = "GEOJSON"
-
-
-@extend_schema_view(
-    list=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='response_format',
-                type=OpenApiTypes.STR,
-                enum=[format.value for format in FormatEnum],
-                description='Determines the format of the response.',
-                required=False,
-                default=FormatEnum.JSON.value,
-                location=OpenApiParameter.QUERY
-            )
-        ]
-    )
-)
-class VRIViewSet(GenericViewSet, ListModelMixin):
+class VRIViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
     """
     ViewSet for the Vector Risk Index (VRI) model.
     """
     queryset = VRI.objects
     serializer_class = VRISerializer
+    layer_classes = [VRIMunicipalityVectorLayer]
+
+    id = "features"
+    tile_fields = ('anomaly_degree', )
+
+    @action(detail=False, methods=['get'], renderer_classes=(MVTRenderer, ),
+            url_path='tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+).pbf', url_name='tile')
+    def tile(self, request, z, x, y, *args, **kwargs):
+        z, x, y = int(z), int(x), int(y)
+        content, status = self.get_content_status(z, x, y)
+        return Response(content, status=status)
 
     def get_queryset(self):
         """
@@ -43,14 +34,6 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
         the method action and the request parameters.
         """
         queryset = super().get_queryset()
-
-        # Query parameters
-        format = self.request.query_params.get('response_format')
-
-        if format == FormatEnum.GEOJSON:
-            queryset = queryset.with_geometry().all()
-        else:
-            queryset = queryset.all()
 
         if self.action == 'list':
             # Get the most recent date in the queryset
@@ -66,11 +49,6 @@ class VRIViewSet(GenericViewSet, ListModelMixin):
         Override the get_serializer_class method to return the appropriate
         serializer class based on the method action and the request parameters.
         """
-        format = self.request.query_params.get('response_format')
-
-        if format == FormatEnum.GEOJSON:
-            # return VRIWithGeometrySerializer
-            return GeoVRISerializer
         return super().get_serializer_class()
 
     # TODO: Query parameters: geometry, level

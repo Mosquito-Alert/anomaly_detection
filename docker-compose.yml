@@ -34,6 +34,7 @@ services:
       - anomaly-detection-local-db_data_backups:/backups
     env_file:
       - ./api/.envs/.local/.postgres.env
+    command: "-c log_statement=all"
 
 volumes:
   anomaly-detection-local-db_data:
