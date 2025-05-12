@@ -26,7 +26,7 @@ class TestMetricModel:
         Test the string representation of a Metric instance.
         """
         metric1, _, _, _ = metrics
-        assert str(metric1) == f"Bites Index Metric for {metric1.region.name} on {metric1.date}: {metric1.actual_value}"
+        assert str(metric1) == f"Bites Index Metric for {metric1.region.name} on {metric1.date}: {metric1.value}"
 
     def test_metric_meta(self):
         """
@@ -47,8 +47,8 @@ class TestMetricModel:
         assert metric2.anomaly_degree is not None
         assert isinstance(metric2.anomaly_degree, float)
         assert metric1.anomaly_degree == 0.0
-        assert metric2.anomaly_degree == (metric2.actual_value - metric2.upper_value) / metric2.actual_value
-        assert metric3.anomaly_degree == (metric3.actual_value - metric3.lower_value) / metric3.actual_value
+        assert metric2.anomaly_degree == (metric2.value - metric2.upper_value) / metric2.value
+        assert metric3.anomaly_degree == (metric3.value - metric3.lower_value) / metric3.value
 
     def test_metric_region(self, metrics, multipolygon):
         """

@@ -39,7 +39,7 @@ class Command(BaseCommand):
         # Rename columns to match the model fields
         metric_data.rename(columns={
             'ds': 'date',
-            'y': 'actual_value',
+            'y': 'value',
             'yhat': 'predicted_value',
             'yhat_lower': 'lower_value',
             'yhat_upper': 'upper_value',
@@ -47,7 +47,7 @@ class Command(BaseCommand):
         # Convert date column to datetime
         metric_data['date'] = pd.to_datetime(metric_data['date'])
         # Conver all numeric columns to float
-        metric_data['actual_value'] = metric_data['actual_value'].astype(float)
+        metric_data['value'] = metric_data['value'].astype(float)
         metric_data['predicted_value'] = metric_data['predicted_value'].astype(float)
         metric_data['lower_value'] = metric_data['lower_value'].astype(float)
         metric_data['upper_value'] = metric_data['upper_value'].astype(float)
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                     Metric.objects.update_or_create(
                         region=municipality,
                         date=row['date'],
-                        actual_value=row['actual_value'],
+                        value=row['value'],
                         predicted_value=row['predicted_value'],
                         lower_value=row['lower_value'],
                         upper_value=row['upper_value'],

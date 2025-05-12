@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.db.models import Case, F, Value, When
 
@@ -9,6 +10,8 @@ class Metric(models.Model):
     """
     Model to store a metric of data, such as a Bites Index.
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     # TODO: Use ContentType and GenericRelation for region field
     region = models.ForeignKey(
         Municipality,
@@ -19,7 +22,7 @@ class Metric(models.Model):
     # TODO: type. A foreign key to a model MetricType
 
     date = models.DateField()
-    actual_value = models.FloatField()
+    value = models.FloatField()
     predicted_value = models.FloatField()
     lower_value = models.FloatField()
     upper_value = models.FloatField()
@@ -27,10 +30,10 @@ class Metric(models.Model):
 
     anomaly_degree = models.GeneratedField(
         expression=Case(
-            When(actual_value__gt=F('upper_value'),
-                 then=(F('actual_value') - F('upper_value')) / F('actual_value')),
-            When(actual_value__lt=F('lower_value'),
-                 then=(F('actual_value') - F('lower_value')) / F('actual_value')),
+            When(value__gt=F('upper_value'),
+                 then=(F('value') - F('upper_value')) / F('value')),
+            When(value__lt=F('lower_value'),
+                 then=(F('value') - F('lower_value')) / F('value')),
             default=Value(0.0),
             output_field=models.FloatField(),
         ),
@@ -46,7 +49,7 @@ class Metric(models.Model):
     objects = RegionSelectedManager()
 
     def __str__(self):
-        return f"Bites Index Metric for {self.region.name} on {self.date}: {self.actual_value}"
+        return f"Bites Index Metric for {self.region.name} on {self.date}: {self.value}"
 
     class Meta:
         ordering = ['region', '-date']
@@ -63,6 +66,7 @@ class MetricSeasonality(models.Model):
     """
     Model to store the seasonality data for a specific Metric.
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     region = models.ForeignKey(
         Municipality,
         on_delete=models.CASCADE,
@@ -95,6 +99,7 @@ class MetricExecution(models.Model):
     Model to store the data prediction execution information.
     Every time the metrics are updated, a prediction will be executed.
     """
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     date = models.DateField(unique=True)
     # Percentage of values successfully predicted and saved.
     success_percentage = models.FloatField()

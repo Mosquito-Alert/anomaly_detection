@@ -74,7 +74,7 @@ def metrics(municipality):
     metric1 = Metric.objects.create(
         region=municipality1,
         date='2023-01-01',
-        actual_value=0.8,
+        value=0.8,
         predicted_value=0.85,
         lower_value=0.5,
         upper_value=1.0,
@@ -83,7 +83,7 @@ def metrics(municipality):
     metric2 = Metric.objects.create(
         region=municipality1,
         date='2023-01-02',
-        actual_value=0.9,
+        value=0.9,
         predicted_value=0.75,
         lower_value=0.6,
         upper_value=0.8,
@@ -92,7 +92,7 @@ def metrics(municipality):
     metric3 = Metric.objects.create(
         region=municipality1,
         date='2023-01-03',
-        actual_value=0.4,
+        value=0.4,
         predicted_value=0.75,
         lower_value=0.5,
         upper_value=0.9,
@@ -101,7 +101,7 @@ def metrics(municipality):
     metric4 = Metric.objects.create(
         region=municipality2,
         date='2023-01-03',
-        actual_value=0.7,
+        value=0.7,
         predicted_value=0.85,
         lower_value=0.4,
         upper_value=0.9,

@@ -5,10 +5,28 @@ from django.urls import reverse
 from rest_framework import status
 
 from anomaly_detection.predictions.models import Metric
-from anomaly_detection.predictions.serializers import (MetricSerializer,
-                                                       GeoMetricSerializer)
+from anomaly_detection.predictions.serializers import MetricSerializer
+
 
 Metrics_URL = reverse('metrics:metrics-list')
+
+
+def get_tiles_url(x, y, z):
+    """Create and return the tiles URL."""
+    return reverse('metrics:metrics-tiles', args=[z, x, y])
+
+
+def _get_queries(connection):
+    """
+    Filter the queries to get only the ones that contain 'SELECT' and 'metric'.
+    """
+    return [
+        query for query in connection.queries
+        if 'SELECT' in query['sql']
+        and 'metric' in query['sql']
+        and not query['sql'].startswith('EXPLAIN')
+        and 'silk' not in query['sql']
+    ]
 
 
 @pytest.mark.django_db()
@@ -17,32 +35,39 @@ class TestMetricListView:
     Tests the Metric View for the List action.
     """
 
-    def _get_queries(self, connection):
-        """
-        Filter the queries to get only the ones that contain 'SELECT' and 'metric'.
-        """
-        return [
-            query for query in connection.queries
-            if 'SELECT' in query['sql']
-            and 'metric' in query['sql']
-            and not query['sql'].startswith('EXPLAIN')
-            and 'silk' not in query['sql']
-        ]
-
     def test_retrieve_metric_list(self, metrics, client):
         """
         Retrieve the list of Metric instances.
         """
         res = client.get(Metrics_URL)
 
-        metrics_from_db = Metric.objects.all().filter(date=metrics[3].date)
+        metrics_from_db = Metric.objects.all()
         serialized = MetricSerializer(metrics_from_db, many=True)
         assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 4
+        assert res.data[3]['value'] == metrics[3].value
+        assert res.data[3]['region_code'] == metrics[3].region.code
+        for res_i in res.data:
+            assert res_i in serialized.data
+
+    def test_retrieve_metric_list_history(self, metrics, client):
+        """
+        Retrieve the list of Metric instances for a specific Region (history mode).
+        """
+
+        res = client.get(Metrics_URL, {'region_code': 'ESP.1.1.1.1_1'})
+
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 3
+
+    def test_retrieve_metric_list_date(self, metrics, client):
+        """
+        Retrieve the list of Metric instances for a specific range of dates.
+        """
+        res = client.get(Metrics_URL, {'date_from': '2023-01-01', 'date_to': '2023-01-02'})
+
+        assert res.status_code == status.HTTP_200_OK
         assert len(res.data) == 2
-        assert res.data[1]['actual_value'] == metrics[3].actual_value
-        assert res.data == serialized.data
-        # Check that the region is not serialized with geometry
-        assert res.data[1]['region'].get('geometry') is None
 
     def test_retrieve_metric_list_number_of_queries(self, metrics, client, connection):
         """
@@ -52,55 +77,38 @@ class TestMetricListView:
         res = client.get(Metrics_URL)
 
         assert res.status_code == status.HTTP_200_OK
-        # Check that only 2 queries are executed (1 for getting the latest date
-        # and 1 for getting the Metric instances with the region joined)
-        _ = res.data[1]['actual_value']
-        _ = res.data[1]['region']['name']
-        assert len(self._get_queries(connection)) == 2
+        _ = res.data[1]['value']
+        _ = res.data[1]['region_code']
+        assert len(_get_queries(connection)) == 1
 
-# TODO: Protobuffer
-    # def test_retrieve_metric_list_with_geometry(self, metrics, client):
-    #     """
-    #     Retrieve the list of Metric instances with geometry.
-    #     """
-    #     res = client.get(Metrics_URL, {'response_format': 'GEOJSON'})
 
-    #     metrics_from_db = Metric.objects.with_geometry().all().filter(date=metrics[3].date)
-    #     serialized = GeoMetricSerializer(metrics_from_db, many=True)
+@pytest.mark.django_db()
+class TestMetricTilesView:
+    def test_retrieve_metric_tiles(self, metrics, client):
+        """
+        Retrieve the list of tiles of every municipality.
+        """
+        url = get_tiles_url(0, 0, 1)
+        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
 
-    #     assert res.status_code == status.HTTP_200_OK
+        assert res.status_code == status.HTTP_200_OK
+        assert res.headers['Content-Type'] == 'application/vnd.mapbox-vector-tile; charset=utf-8'
 
-    #     # Check that the response is in GEOJSON format
-    #     assert 'features' in res.data
+    def test_retrieve_metric_tiles_empty(self, metrics, client):
+        """
+        Retrieve the list of tiles of every municipality, but out of focus.
+        """
+        url = get_tiles_url(250, 250, 5)
+        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
 
-    #     # Check the data
-    #     res_data = res.data['features']
-    #     assert len(res_data) == 2
-    #     assert res_data[1]['properties']['anomaly_degree'] == metrics[3].anomaly_degree
-    #     assert res_data[1]['properties']['region']['code'] == metrics[3].region.code
+        assert res.status_code == status.HTTP_204_NO_CONTENT
 
-    #     # Check that the region is not serialized with geometry or other optional fields
-    #     assert res_data[1]['properties']['region'].get('geometry') is None
-    #     assert res_data[1]['properties']['region'].get('alt_name') is None
+    def test_retrieve_metric_tiles_number_of_queries(self, metrics, client, connection):
+        """
+        Retrieve the list of tiles of every municipality and check the number of queries executed.
+        """
+        url = get_tiles_url(0, 0, 1)
+        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
 
-    #     # Check the geometry
-    #     assert 'geometry' in res_data[1]
-    #     assert res_data[1]['geometry']['type'] == 'MultiPolygon'
-    #     assert res_data[1]['geometry']['coordinates'] is not None  # TODO: Maybe check the coordinates
-
-    #     # Final check with the serialized data
-    #     assert res.data == serialized.data
-
-    # def test_retrieve_metric_list_with_geometry_number_of_queries(self, metrics, client, connection):
-    #     """
-    #     Retrieve the list of Metric instances with geometry and check the number of queries executed
-    #     """
-    #     res = client.get(Metrics_URL, {'response_format': 'GEOJSON'})
-
-    #     assert res.status_code == status.HTTP_200_OK
-    #     # Check that only 2 queries are executed (1 for getting the latest date
-    #     # and 1 for getting the Metric instances with the region joined)
-    #     _ = res.data['features'][1]['properties']['anomaly_degree']
-    #     _ = res.data['features'][1]['properties']['region']['code']
-    #     _ = res.data['features'][1]['geometry']
-    #     assert len(self._get_queries(connection)) == 2
+        assert res.status_code == status.HTTP_200_OK
+        assert len(_get_queries(connection)) == 1
