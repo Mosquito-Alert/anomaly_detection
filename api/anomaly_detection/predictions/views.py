@@ -1,6 +1,7 @@
 from datetime import datetime
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
@@ -9,8 +10,8 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.predictions.models import Metric
-from anomaly_detection.predictions.serializers import MetricSerializer
+from anomaly_detection.predictions.models import Metric, MetricExecution
+from anomaly_detection.predictions.serializers import LastMetricDateSerializer, MetricSerializer
 from anomaly_detection.predictions.vector_layers import MetricMunicipalityVectorLayer
 
 
@@ -41,7 +42,7 @@ from anomaly_detection.predictions.vector_layers import MetricMunicipalityVector
 
         ]
     ),
-    tiles=extend_schema(
+    get_tiles=extend_schema(
         parameters=[
             OpenApiParameter(
                 name='date',
@@ -52,7 +53,8 @@ from anomaly_detection.predictions.vector_layers import MetricMunicipalityVector
             ),
 
         ]
-    )
+    ),
+    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer)
 )
 class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
     """
@@ -75,15 +77,32 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
             raise ValidationError(e)
 
     @action(
+        methods=['GET'],
         detail=False,
-        methods=['get'],
         renderer_classes=(MVTRenderer, ),
-        url_path=r'tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+).pbf',
+        url_path=r'tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+).pbf',  # TODO: Remove trailing slash (only in this method)
         url_name='tiles')
-    def tiles(self, request, z, x, y, *args, **kwargs):
+    def get_tiles(self, request, z, x, y, *args, **kwargs):
+        """
+        Action that returns the tiles of a specified area and zoom
+        """
         z, x, y = int(z), int(x), int(y)
         content, status = self.get_content_status(z, x, y)
         return Response(content, status=status)
+
+    @action(methods=['GET'], detail=False, url_path='dates/last', url_name='last-date')
+    def get_last_date(self, request, *args, **kwargs):
+        """
+        Action that returns the last date in which there are metrics available.
+        """
+        last_execution = MetricExecution.objects.filter(success_percentage__gte=0.95).order_by("-date").first()
+        if last_execution:
+            serializer = LastMetricDateSerializer({"date": last_execution.date})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "No executions found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
     def get_queryset(self):
         """
@@ -102,7 +121,6 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
                 queryset = queryset.filter(date__lte=date_to)
             if region_code:
                 queryset = queryset.filter(region__code=region_code)
-
         #     # ! return queryset.order_by()
         return queryset
 

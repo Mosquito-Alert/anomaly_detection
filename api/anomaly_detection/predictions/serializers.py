@@ -1,4 +1,5 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer, Serializer, SerializerMethodField
 
 
 from .models import Metric, MetricSeasonality
@@ -28,3 +29,10 @@ class MetricSeasonalitySerializer(ModelSerializer):
         model = MetricSeasonality
         fields = ['id', 'index', 'yearly_value', 'region']
         read_only_fields = ['created_at', 'updated_at']
+
+
+class LastMetricDateSerializer(Serializer):
+    """
+    Serializer for the Metric Executions.
+    """
+    date = serializers.DateField()

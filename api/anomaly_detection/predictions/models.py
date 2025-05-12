@@ -99,7 +99,18 @@ class MetricExecution(models.Model):
     Model to store the data prediction execution information.
     Every time the metrics are updated, a prediction will be executed.
     """
-    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     date = models.DateField(unique=True)
     # Percentage of values successfully predicted and saved.
     success_percentage = models.FloatField()
+
+    def __str__(self):
+        return f"Metric Execution of the day {self.date} with result: {self.success_percentage}"
+
+    class Meta:
+        ordering = ['date']
+        indexes = [
+            models.Index(fields=['-date'])
+        ]
+        verbose_name = "Metric Execution"
+        verbose_name_plural = "Metric Executions"

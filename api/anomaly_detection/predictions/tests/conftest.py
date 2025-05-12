@@ -5,7 +5,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from anomaly_detection.geo.models import (AutonomousCommunity, Country,
                                           Municipality, Province)
-from anomaly_detection.predictions.models import Metric, MetricSeasonality
+from anomaly_detection.predictions.models import Metric, MetricExecution, MetricSeasonality
 
 
 @pytest.fixture
@@ -125,3 +125,21 @@ def seasonalities(municipality):
         yearly_value=0.6
     )
     return seasonality1, seasonality2
+
+
+@pytest.fixture
+def metric_executions():
+    """Fixture to create a MetricExecution instance."""
+    metric_execution1 = MetricExecution.objects.create(
+        date='2024-01-31',
+        success_percentage=0.99
+    )
+    metric_execution2 = MetricExecution.objects.create(
+        date='2024-01-30',
+        success_percentage=1
+    )
+    metric_execution3 = MetricExecution.objects.create(
+        date='2025-01-30',
+        success_percentage=0.93
+    )
+    return metric_execution1, metric_execution2, metric_execution3

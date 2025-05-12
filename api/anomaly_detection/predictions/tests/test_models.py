@@ -1,7 +1,7 @@
 import pytest
 
 from anomaly_detection.geo.models import Municipality
-from anomaly_detection.predictions.models import Metric, MetricSeasonality
+from anomaly_detection.predictions.models import Metric, MetricExecution, MetricSeasonality
 
 
 @pytest.mark.django_db
@@ -173,3 +173,31 @@ class TestMetricSeasonalityModel:
         queries_after_geometry = len(connection.queries)
 
         assert queries_after_geometry == 1
+
+
+@pytest.mark.django_db
+class TestMetricExecution:
+    """
+    Test the MetricExecution model.
+    """
+
+    def test_metric_execution_creation(self, metric_executions):
+        """
+        Test the creation of a MetricExecution instance.
+        """
+        metric_execution1, metric_execution2 = metric_executions
+        assert isinstance(metric_execution1, MetricExecution)
+        assert metric_execution1.date == '2024-01-31'
+        assert metric_execution1.success_percentage == 0.99
+        assert metric_execution2.date == '2024-01-30'
+
+    def test_metric_seasonality_str(self, metric_executions):
+        """
+        Test the string representation of a MetricExecution instance.
+        """
+        metric_execution1, _ = metric_executions
+        assert str(
+            metric_execution1) == (
+                f"Metric Execution of the day {metric_execution1.date} with result: "
+                f"{metric_execution1.success_percentage}"
+        )

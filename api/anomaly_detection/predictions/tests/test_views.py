@@ -8,7 +8,8 @@ from anomaly_detection.predictions.models import Metric
 from anomaly_detection.predictions.serializers import MetricSerializer
 
 
-Metrics_URL = reverse('metrics:metrics-list')
+METRICS_URL = reverse('metrics:metrics-list')
+METRICS_LAST_DATE_URL = reverse('metrics:metrics-last-date')
 
 
 def get_tiles_url(x, y, z):
@@ -39,7 +40,7 @@ class TestMetricListView:
         """
         Retrieve the list of Metric instances.
         """
-        res = client.get(Metrics_URL)
+        res = client.get(METRICS_URL)
 
         metrics_from_db = Metric.objects.all()
         serialized = MetricSerializer(metrics_from_db, many=True)
@@ -55,7 +56,7 @@ class TestMetricListView:
         Retrieve the list of Metric instances for a specific Region (history mode).
         """
 
-        res = client.get(Metrics_URL, {'region_code': 'ESP.1.1.1.1_1'})
+        res = client.get(METRICS_URL, {'region_code': 'ESP.1.1.1.1_1'})
 
         assert res.status_code == status.HTTP_200_OK
         assert len(res.data) == 3
@@ -64,7 +65,7 @@ class TestMetricListView:
         """
         Retrieve the list of Metric instances for a specific range of dates.
         """
-        res = client.get(Metrics_URL, {'date_from': '2023-01-01', 'date_to': '2023-01-02'})
+        res = client.get(METRICS_URL, {'date_from': '2023-01-01', 'date_to': '2023-01-02'})
 
         assert res.status_code == status.HTTP_200_OK
         assert len(res.data) == 2
@@ -74,7 +75,7 @@ class TestMetricListView:
         Retrieve the list of Metric instances and check the number of queries executed.
         """
 
-        res = client.get(Metrics_URL)
+        res = client.get(METRICS_URL)
 
         assert res.status_code == status.HTTP_200_OK
         _ = res.data[1]['value']
@@ -112,3 +113,17 @@ class TestMetricTilesView:
 
         assert res.status_code == status.HTTP_200_OK
         assert len(_get_queries(connection)) == 1
+
+
+@pytest.mark.django_db()
+class TestDateMetricView:
+    def test_retrieve_metric_date(self, metric_executions, client):
+        """
+        Retrieve the last date available.
+        """
+        metric_execution1, _, _ = metric_executions
+
+        res = client.get(METRICS_LAST_DATE_URL)
+
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data['date'] == metric_execution1.date
