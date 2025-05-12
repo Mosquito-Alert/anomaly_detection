@@ -2,6 +2,7 @@ from datetime import datetime
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -64,6 +65,15 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
     id = "features"
     tile_fields = ('anomaly_degree', )
 
+    def get_layer_class_kwargs(self):
+        return {'date': self.request.query_params.get('date')}
+
+    def get_layers(self):
+        try:
+            return super().get_layers()
+        except ValueError as e:
+            raise ValidationError(e)
+
     @action(
         detail=False,
         methods=['get'],
@@ -93,13 +103,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
             if region_code:
                 queryset = queryset.filter(region__code=region_code)
 
-        if self.action == 'tile':
-            date = self.request.query_params.get('date')
-            if not date:
-                # TODO: RAISE ERROR
-                return None
-            queryset = queryset.filter(date=date)
-            return queryset.order_by()
+        #     # ! return queryset.order_by()
         return queryset
 
     def get_serializer_class(self):
@@ -108,8 +112,3 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
         serializer class based on the method action and the request parameters.
         """
         return super().get_serializer_class()
-
-    # TODO: Query parameters: geometry, level
-    # TODO: Depending on the query parameter, return a JSON or a GeoJSON
-    # TODO: Get serializer depending on the mixin (list or detail)
-    # TODO: 2 actions: history and seasonality

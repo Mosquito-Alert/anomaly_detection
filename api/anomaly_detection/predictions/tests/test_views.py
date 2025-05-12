@@ -89,7 +89,7 @@ class TestMetricTilesView:
         Retrieve the list of tiles of every municipality.
         """
         url = get_tiles_url(0, 0, 1)
-        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
+        res = client.get(url, {'date': '2023-01-01'})
 
         assert res.status_code == status.HTTP_200_OK
         assert res.headers['Content-Type'] == 'application/vnd.mapbox-vector-tile; charset=utf-8'
@@ -99,7 +99,7 @@ class TestMetricTilesView:
         Retrieve the list of tiles of every municipality, but out of focus.
         """
         url = get_tiles_url(250, 250, 5)
-        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
+        res = client.get(url, {'date': '2023-01-01'})
 
         assert res.status_code == status.HTTP_204_NO_CONTENT
 
@@ -108,7 +108,7 @@ class TestMetricTilesView:
         Retrieve the list of tiles of every municipality and check the number of queries executed.
         """
         url = get_tiles_url(0, 0, 1)
-        res = client.get(url, {'region_code': 'ESP.1.1.1.1_1'})
+        res = client.get(url, {'date': '2023-01-01'})
 
         assert res.status_code == status.HTTP_200_OK
         assert len(_get_queries(connection)) == 1
