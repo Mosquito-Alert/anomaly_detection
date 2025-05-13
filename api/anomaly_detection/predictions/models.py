@@ -151,8 +151,8 @@ class MetricSeasonality(models.Model):
                 fields=['region', 'index'], name='unique_region_seasonality'
             )
         ]
-        verbose_name = 'Seasonality for metric'
-        verbose_name_plural = 'Seasonalities for metric'
+        verbose_name = 'Metric Seasonality slot'
+        verbose_name_plural = 'Metric Seasonality'
 
 
 class MetricExecution(models.Model):
