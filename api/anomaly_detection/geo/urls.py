@@ -8,5 +8,5 @@ from anomaly_detection.geo.views import GEOViewSet
 app_name = 'geo'
 
 urlpatterns = [
-    path('geo/<int:z>/<int:x>/<int:y>.pbf', GEOViewSet.as_view(), name='geo-region'),
+    path('geo/tiles/<int:z>/<int:x>/<int:y>', GEOViewSet.as_view(), name='geo-region'),
 ]

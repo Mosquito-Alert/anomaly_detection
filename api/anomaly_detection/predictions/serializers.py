@@ -40,7 +40,7 @@ class MetricSeasonalitySerializer(ModelSerializer):
     """
     class Meta:
         model = MetricSeasonality
-        fields = ['id', 'index', 'yearly_value', 'region']
+        fields = ['id', 'index', 'yearly_value']
         read_only_fields = ['created_at', 'updated_at']
 
 

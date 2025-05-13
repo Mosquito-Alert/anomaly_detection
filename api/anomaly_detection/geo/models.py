@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from django.utils.translation import gettext_lazy as _
 
 from .managers import RegionManager
 
@@ -7,10 +8,34 @@ class AbstractRegion(models.Model):
     """
     Abstract model to store the region data.
     """
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255)
-    alt_name = models.CharField(max_length=255, blank=True, null=True)
-    geometry = models.MultiPolygonField()
+    code = models.CharField(
+        max_length=32,
+        unique=True,
+        null=False,
+        blank=False,
+        verbose_name=_('Code'),
+        help_text=_('The unique code that identifies the region.')
+    )
+    name = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        verbose_name=_('Name'),
+        help_text=_('The name of the region.')
+    )
+    alt_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name=_('Alternative names.'),
+        help_text=_('Alternative names for the region. If there is more than one, they will be delimited by "|".')
+    )
+    geometry = models.MultiPolygonField(
+        blank=False,
+        null=False,
+        verbose_name=_('Geometry.'),
+        help_text=_('Geometry of the region.')
+    )
 
     # Manager
     objects = RegionManager()
@@ -30,10 +55,35 @@ class Country(models.Model):
     """
     Model to store the country data.
     """
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=255)
-    alt_name = models.CharField(max_length=255, blank=True, null=True)
-    continent = models.CharField(max_length=64)
+    code = models.CharField(
+        max_length=32,
+        unique=True,
+        null=False,
+        blank=False,
+        verbose_name=_('Code'),
+        help_text=_('The unique code that identifies the region.')
+    )
+    name = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        verbose_name=_('Name'),
+        help_text=_('The name of the region.')
+    )
+    alt_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name=_('Alternative names.'),
+        help_text=_('Alternative names for the region. If there is more than one, they will be delimited by "|".')
+    )
+    continent = models.CharField(
+        max_length=64,
+        null=False,
+        blank=False,
+        verbose_name=_('Continent'),
+        help_text=_('The name of the continent.')
+    )
 
     def __str__(self):
         return self.name

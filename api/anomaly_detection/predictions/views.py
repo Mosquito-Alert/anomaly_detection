@@ -27,14 +27,14 @@ from anomaly_detection.predictions.vector_layers import \
             OpenApiParameter(
                 name='date_from',
                 type=OpenApiTypes.DATE,
-                description='Starting date which the results will return.',
+                description='Starting date from which the results will return.',
                 required=False,
                 default=datetime.today().strftime('%Y-%m-%d')
             ),
             OpenApiParameter(
                 name='date_to',
                 type=OpenApiTypes.DATE,
-                description='Ending date which the results will return.',
+                description='Ending date which to the results will return.',
                 required=False,
                 default=datetime.today().strftime('%Y-%m-%d')
             ),
@@ -60,7 +60,8 @@ from anomaly_detection.predictions.vector_layers import \
 
         ]
     ),
-    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer),
+    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer,
+                                operation_id="metrics_last_date_retrieve"),
     get_seasonality=extend_schema(
         parameters=[
             OpenApiParameter(
@@ -97,7 +98,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         methods=['GET'],
         detail=False,
         renderer_classes=(MVTRenderer, ),
-        url_path=r'tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+).pbf',  # TODO: Remove trailing slash (only in this method)
+        url_path=r'tiles/(?P<z>\d+)/(?P<x>\d+)/(?P<y>\d+)',  # TODO: Remove trailing slash (only in this method)
         url_name='tiles')
     def get_tiles(self, request, z, x, y, *args, **kwargs):
         """
