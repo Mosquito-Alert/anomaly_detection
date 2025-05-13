@@ -4,14 +4,14 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.mixins import ListModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
 from anomaly_detection.predictions.models import Metric, MetricExecution
-from anomaly_detection.predictions.serializers import LastMetricDateSerializer, MetricSerializer
+from anomaly_detection.predictions.serializers import LastMetricDateSerializer, MetricDetailSerializer, MetricSerializer
 from anomaly_detection.predictions.vector_layers import MetricMunicipalityVectorLayer
 
 
@@ -56,7 +56,7 @@ from anomaly_detection.predictions.vector_layers import MetricMunicipalityVector
     ),
     get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer)
 )
-class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
+class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
     ViewSet for Metric model.
     """
@@ -121,7 +121,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
                 queryset = queryset.filter(date__lte=date_to)
             if region_code:
                 queryset = queryset.filter(region__code=region_code)
-        #     # ! return queryset.order_by()
+
         return queryset
 
     def get_serializer_class(self):
@@ -129,4 +129,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
         Override the get_serializer_class method to return the appropriate
         serializer class based on the method action and the request parameters.
         """
+        if self.action == 'retrieve':
+            return MetricDetailSerializer
+
         return super().get_serializer_class()

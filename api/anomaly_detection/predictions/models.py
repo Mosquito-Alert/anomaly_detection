@@ -16,8 +16,7 @@ class Metric(models.Model):
     region = models.ForeignKey(
         Municipality,
         on_delete=models.CASCADE,
-        related_name='metrics',
-        unique_for_date='date'
+        related_name='metrics'
     )
     # TODO: type. A foreign key to a model MetricType
 
@@ -57,7 +56,11 @@ class Metric(models.Model):
             models.Index(fields=['date']),
             models.Index(fields=['region', 'date'])
         ]
-        unique_together = ('region', 'date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['region', 'date'], name='unique_metric'
+            )
+        ]
         verbose_name = 'Metric'
         verbose_name_plural = 'Metrics'
 

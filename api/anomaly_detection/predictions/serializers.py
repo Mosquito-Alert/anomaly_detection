@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer, Serializer, SerializerMethodField
+from rest_framework.serializers import (ModelSerializer, Serializer,
+                                        SerializerMethodField)
 
+from anomaly_detection.geo.serializers import MunicipalitySerializer
 
 from .models import Metric, MetricSeasonality
 
@@ -19,6 +21,17 @@ class MetricSerializer(ModelSerializer):
         fields = ['id', 'date', 'value', 'predicted_value', 'lower_value', 'upper_value',
                   'trend', 'anomaly_degree', 'region_code']
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
+
+
+class MetricDetailSerializer(MetricSerializer):
+    """
+    Serializer for the Metric detail.
+    """
+    region = MunicipalitySerializer()
+
+    class Meta(MetricSerializer.Meta):
+        fields = ['id', 'date', 'value', 'predicted_value', 'lower_value', 'upper_value',
+                  'trend', 'anomaly_degree', 'region']
 
 
 class MetricSeasonalitySerializer(ModelSerializer):

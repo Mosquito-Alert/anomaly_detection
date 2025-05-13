@@ -12,6 +12,11 @@ METRICS_URL = reverse('metrics:metrics-list')
 METRICS_LAST_DATE_URL = reverse('metrics:metrics-last-date')
 
 
+def get_metric_detail_url(id):
+    """Create and return the metric detail URL."""
+    return reverse('metrics:metrics-detail', args=[id])
+
+
 def get_tiles_url(x, y, z):
     """Create and return the tiles URL."""
     return reverse('metrics:metrics-tiles', args=[z, x, y])
@@ -110,6 +115,33 @@ class TestMetricTilesView:
         """
         url = get_tiles_url(0, 0, 1)
         res = client.get(url, {'date': '2023-01-01'})
+
+        assert res.status_code == status.HTTP_200_OK
+        assert len(_get_queries(connection)) == 1
+
+
+@pytest.mark.django_db()
+class TestMetricDetailView:
+    def test_retrieve_metric_detail(self, metrics, client):
+        """
+        Retrieve a single metric.
+        """
+        metric_id = metrics[0].id
+        url = get_metric_detail_url(metric_id)
+        res = client.get(url)
+
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data['value'] == metrics[0].value
+        assert res.data['region']['code'] == metrics[0].region.code
+        assert 'geometry' not in res.data['region']
+
+    def test_retrieve_metric_detail_number_of_queries(self, metrics, client, connection):
+        """
+        RRetrieve a single metric and check the number of queries executed.
+        """
+        metric_id = metrics[0].id
+        url = get_metric_detail_url(metric_id)
+        res = client.get(url)
 
         assert res.status_code == status.HTTP_200_OK
         assert len(_get_queries(connection)) == 1
