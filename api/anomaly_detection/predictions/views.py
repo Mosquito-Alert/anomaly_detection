@@ -1,6 +1,8 @@
 from datetime import datetime
+
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import (OpenApiParameter, extend_schema,
+                                   extend_schema_view)
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -10,9 +12,13 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.predictions.models import Metric, MetricExecution
-from anomaly_detection.predictions.serializers import LastMetricDateSerializer, MetricDetailSerializer, MetricSerializer
-from anomaly_detection.predictions.vector_layers import MetricMunicipalityVectorLayer
+from anomaly_detection.predictions.models import (Metric, MetricExecution,
+                                                  MetricSeasonality)
+from anomaly_detection.predictions.serializers import (
+    LastMetricDateSerializer, MetricDetailSerializer,
+    MetricSeasonalitySerializer, MetricSerializer)
+from anomaly_detection.predictions.vector_layers import \
+    MetricMunicipalityVectorLayer
 
 
 @extend_schema_view(
@@ -54,7 +60,18 @@ from anomaly_detection.predictions.vector_layers import MetricMunicipalityVector
 
         ]
     ),
-    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer)
+    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer),
+    get_seasonality=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='region_code',
+                type=OpenApiTypes.STR,
+                description='Determines the region of the seasonality.',
+                required=True,
+                default='ESP.1.1.1.1_1'
+            ),
+        ]
+    )
 )
 class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
@@ -101,6 +118,24 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             {"detail": "No executions found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    @action(methods=['GET'], detail=False, url_path='seasonality', url_name='seasonality')
+    def get_seasonality(self, *args, **kwargs):
+        """
+        Action that returns the seasonality of a specific metric.
+        """
+        region_code = self.request.query_params.get('region_code')
+        if region_code is None:
+            raise ValidationError('The query parameter "region_code" is mandatory.')
+
+        seasonality = MetricSeasonality.objects.filter(region__code=region_code)  # .order_by('index')
+        if seasonality:
+            serializer = MetricSeasonalitySerializer(seasonality, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f'No seasonality for region {region_code} found.'},
             status=status.HTTP_404_NOT_FOUND
         )
 

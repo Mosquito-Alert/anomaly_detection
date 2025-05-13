@@ -105,7 +105,7 @@ class TestMetricSeasonalityModel:
         Test the creation of a MetricSeasonality instance.
         """
         municipality1, _ = municipality
-        seasonality1, seasonality2 = seasonalities
+        seasonality1, seasonality2, _ = seasonalities
         assert isinstance(seasonality1, MetricSeasonality)
         assert seasonality1.region.code == 'ESP.1.1.1.1_1'
         assert seasonality2.yearly_value == 0.6
@@ -115,7 +115,7 @@ class TestMetricSeasonalityModel:
         """
         Test the string representation of a MetricSeasonality instance.
         """
-        seasonality1, _ = seasonalities
+        seasonality1, _, _ = seasonalities
         assert str(
             seasonality1) == (
                 f"Bites Index Metric Seasonality for {seasonality1.region.name} on day {seasonality1.index + 1}: "
@@ -136,7 +136,7 @@ class TestMetricSeasonalityModel:
         """
         Test the region field of the MetricSeasonality model.
         """
-        seasonality1, _ = seasonalities
+        seasonality1, _, _ = seasonalities
         assert seasonality1.region is not None
         assert isinstance(seasonality1.region, Municipality)
         assert seasonality1.region.code == 'ESP.1.1.1.1_1'
@@ -185,17 +185,17 @@ class TestMetricExecution:
         """
         Test the creation of a MetricExecution instance.
         """
-        metric_execution1, metric_execution2 = metric_executions
+        metric_execution1, metric_execution2, _ = metric_executions
         assert isinstance(metric_execution1, MetricExecution)
         assert metric_execution1.date == '2024-01-31'
         assert metric_execution1.success_percentage == 0.99
         assert metric_execution2.date == '2024-01-30'
 
-    def test_metric_seasonality_str(self, metric_executions):
+    def test_metric_execution_str(self, metric_executions):
         """
         Test the string representation of a MetricExecution instance.
         """
-        metric_execution1, _ = metric_executions
+        metric_execution1, _, _ = metric_executions
         assert str(
             metric_execution1) == (
                 f"Metric Execution of the day {metric_execution1.date} with result: "

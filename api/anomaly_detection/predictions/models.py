@@ -74,7 +74,6 @@ class MetricSeasonality(models.Model):
         Municipality,
         on_delete=models.CASCADE,
         related_name='seasonalities',
-        # unique_for_date='date'
     )
     # date = models.DateField()
     index = models.SmallIntegerField()

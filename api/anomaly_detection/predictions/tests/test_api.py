@@ -4,12 +4,13 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from anomaly_detection.predictions.models import Metric
-from anomaly_detection.predictions.serializers import MetricSerializer
+from anomaly_detection.predictions.models import Metric, MetricSeasonality
+from anomaly_detection.predictions.serializers import MetricSeasonalitySerializer, MetricSerializer
 
 
 METRICS_URL = reverse('metrics:metrics-list')
 METRICS_LAST_DATE_URL = reverse('metrics:metrics-last-date')
+METRICS_SEASONALITY_URL = reverse('metrics:metrics-seasonality')
 
 
 def get_metric_detail_url(id):
@@ -35,7 +36,7 @@ def _get_queries(connection):
     ]
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db(transaction=True)
 class TestMetricListView:
     """
     Tests the Metric View for the List action.
@@ -88,7 +89,7 @@ class TestMetricListView:
         assert len(_get_queries(connection)) == 1
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db(transaction=True)
 class TestMetricTilesView:
     def test_retrieve_metric_tiles(self, metrics, client):
         """
@@ -100,15 +101,6 @@ class TestMetricTilesView:
         assert res.status_code == status.HTTP_200_OK
         assert res.headers['Content-Type'] == 'application/vnd.mapbox-vector-tile; charset=utf-8'
 
-    def test_retrieve_metric_tiles_empty(self, metrics, client):
-        """
-        Retrieve the list of tiles of every municipality, but out of focus.
-        """
-        url = get_tiles_url(250, 250, 5)
-        res = client.get(url, {'date': '2023-01-01'})
-
-        assert res.status_code == status.HTTP_204_NO_CONTENT
-
     def test_retrieve_metric_tiles_number_of_queries(self, metrics, client, connection):
         """
         Retrieve the list of tiles of every municipality and check the number of queries executed.
@@ -119,8 +111,26 @@ class TestMetricTilesView:
         assert res.status_code == status.HTTP_200_OK
         assert len(_get_queries(connection)) == 1
 
+    def test_retrieve_metric_tiles_empty(self, metrics, client):
+        """
+        Retrieve the list of tiles of every municipality, but out of focus.
+        """
+        url = get_tiles_url(250, 250, 5)
+        res = client.get(url, {'date': '2023-01-01'})
 
-@pytest.mark.django_db()
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_retrieve_metric_tiles_bad_request(self, client):
+        """
+        Test that checks that the query param 'date' is mandatory.
+        """
+        url = get_tiles_url(0, 0, 1)
+        res = client.get(url)
+
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db(transaction=True)
 class TestMetricDetailView:
     def test_retrieve_metric_detail(self, metrics, client):
         """
@@ -146,8 +156,17 @@ class TestMetricDetailView:
         assert res.status_code == status.HTTP_200_OK
         assert len(_get_queries(connection)) == 1
 
+    def test_retrieve_metric_detail_not_found(self, client):
+        """
+        Test that checks the not found error.
+        """
+        url = get_metric_detail_url('not_existing_id')
+        res = client.get(url)
 
-@pytest.mark.django_db()
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db(transaction=True)
 class TestDateMetricView:
     def test_retrieve_metric_date(self, metric_executions, client):
         """
@@ -159,3 +178,44 @@ class TestDateMetricView:
 
         assert res.status_code == status.HTTP_200_OK
         assert res.data['date'] == metric_execution1.date
+
+    def test_retrieve_metric_date_not_found(self, client):
+        """
+        Test that checks the not found error.
+        """
+        res = client.get(METRICS_LAST_DATE_URL)
+
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db(transaction=True)
+class TestMetricSeasonalityView:
+    def test_retrieve_seasonality(self, seasonalities, client):
+        """
+        Retrieve the seasonality for a specific region.
+        """
+        region_code = seasonalities[0].region.code
+        res = client.get(METRICS_SEASONALITY_URL, {'region_code': region_code})
+
+        seasonality_from_db = MetricSeasonality.objects.filter(region__code=region_code)
+        serialized = MetricSeasonalitySerializer(seasonality_from_db, many=True)
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 2
+        for res_i in res.data:
+            assert res_i in serialized.data
+
+    def test_retrieve_seasonality_bad_request(self, client):
+        """
+        Test that checks that the query param 'region_code' is mandatory.
+        """
+        res = client.get(METRICS_SEASONALITY_URL)
+
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_retrieve_seasonality_not_found(self, client):
+        """
+        Test that checks the not found error.
+        """
+        res = client.get(METRICS_SEASONALITY_URL, {'region_code': 'not_existing_id'})
+
+        assert res.status_code == status.HTTP_404_NOT_FOUND

@@ -113,7 +113,7 @@ def metrics(municipality):
 @pytest.fixture
 def seasonalities(municipality):
     """Fixture to create a MetricSeasonality instance."""
-    municipality1, _ = municipality
+    municipality1, municipality2 = municipality
     seasonality1 = MetricSeasonality.objects.create(
         region=municipality1,
         index=0,
@@ -124,7 +124,12 @@ def seasonalities(municipality):
         index=1,
         yearly_value=0.6
     )
-    return seasonality1, seasonality2
+    seasonality3 = MetricSeasonality.objects.create(
+        region=municipality2,
+        index=0,
+        yearly_value=0.65
+    )
+    return seasonality1, seasonality2, seasonality3
 
 
 @pytest.fixture
