@@ -1,7 +1,12 @@
+from datetime import datetime
+import re
+import pandas as pd
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (ModelSerializer, Serializer,
                                         SerializerMethodField)
 
+from anomaly_detection.geo.models import Municipality
 from anomaly_detection.geo.serializers import MunicipalitySerializer
 
 from .models import Metric, Predictor
@@ -60,15 +65,69 @@ class MetricFileSerializer(Serializer):
     """
     file = serializers.FileField()
 
-    # TODO: def create(): override ...
-    # open csv,
-    # load it with pandas,
-    # order_by
-    # def validate_file
-    # for loop,
-    # Metric.objects.create()
+    def validate_file(self, file):
+        """
+        Validate if the file is a CSV file.
+        """
+        # Check content type and extension
+        if file.content_type != 'text/csv':
+            raise ValidationError('Uploaded file must be a CSV file.')
+        if not file.name.endswith('.csv'):
+            raise ValidationError('File extension must be .csv')
 
-    # transaction for the first step (no prophet)
+        # Validate filename pattern
+        pattern = r'^bites_(\d{4}-\d{2}-\d{2})\.csv$'
+        match = re.match(pattern, file.name)
+        if not match:
+            raise ValidationError('Filename must match the format: bites_YYYY-MM-DD.csv')
 
-    class Meta:
-        fields = ['file']
+        # Validate that date part is a real, valid date
+        date_str = match.group(1)
+        try:
+            parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            raise ValidationError(f"Invalid date in filename: {date_str}")
+
+        # Store the extracted date in validated_data
+        self.context['filename_date'] = parsed_date
+
+        return file
+
+    def create(self, validated_data):
+        """
+        Create the metrics contained in the CSV file.
+        """
+        file = validated_data['file']
+        date = self.context.get('filename_date')
+
+        try:
+            df = pd.read_csv(file)
+        except Exception as e:
+            raise ValidationError(f"Error reading CSV: {str(e)}")
+
+        # Validate content
+        required_columns = {'code', 'est'}
+        if not required_columns.issubset(df.columns):
+            missing = required_columns - set(df.columns)
+            raise ValidationError(f'Missing required columns: {", ".join(missing)}')
+        if df.empty:
+            raise ValidationError("The uploaded CSV file is empty — no rows found.")
+
+        created_metrics = []
+        for idx, row in df.iterrows():
+            try:
+                region = Municipality.objects.get(code=row['code'])
+                metric = Metric.objects.create(
+                    region=region,
+                    predictor=None,
+                    date=date,
+                    value=row['est'],
+                )
+                created_metrics.append(metric)
+            except Exception as e:
+                raise ValidationError(f"Error in row {idx + 1}: {str(e)}")
+
+        return created_metrics
+
+        # order_by
+        # transaction for the first step (no prophet)

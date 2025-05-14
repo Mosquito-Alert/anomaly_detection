@@ -157,4 +157,5 @@ SPECTACULAR_SETTINGS = {
         'email': None,
         'url': None,
     },
+    'COMPONENT_SPLIT_REQUEST': True,  # So we can upload images through the UI.
 }

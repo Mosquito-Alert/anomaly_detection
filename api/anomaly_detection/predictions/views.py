@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import (OpenApiParameter, extend_schema,
+from drf_spectacular.utils import (OpenApiParameter, OpenApiResponse, extend_schema,
                                    extend_schema_view)
 from rest_framework import status
 from rest_framework.decorators import action
@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.predictions.models import (Metric, MetricExecution, Predictor)
+from anomaly_detection.predictions.models import Metric, MetricExecution
 from anomaly_detection.predictions.serializers import (
     LastMetricDateSerializer, MetricDetailSerializer, MetricFileSerializer,
     MetricSeasonalitySerializer, MetricSerializer)
@@ -57,12 +57,9 @@ from anomaly_detection.predictions.vector_layers import \
                 default=datetime.today().strftime('%Y-%m-%d')
             ),
         ],
-        # TODO: responses=
     ),
-    get_last_date=extend_schema(responses=LastMetricDateSerializer,
-                                operation_id="metrics_last_date_retrieve"),
-    get_seasonality=extend_schema(responses=MetricSeasonalitySerializer),
-    # TODO: post_batch_create=extend_schema(request=MetricFileSerializer)
+    get_last_date=extend_schema(operation_id="metrics_last_date_retrieve"),
+    post_batch_create=extend_schema(responses={201: OpenApiResponse(description='File processes successfully.')})
 )
 class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
@@ -99,13 +96,13 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         return Response(content, status=status)
 
     @action(methods=['GET'], detail=False, url_path='dates/last', url_name='last-date')
-    def get_last_date(self, request, *args, **kwargs):
+    def get_last_date(self, *args, **kwargs):
         """
         Action that returns the last date in which there are metrics available.
         """
         last_execution = MetricExecution.objects.filter(success_percentage__gte=0.95).order_by("-date").first()
         if last_execution:
-            serializer = LastMetricDateSerializer({"date": last_execution.date})
+            serializer = self.get_serializer({"date": last_execution.date})
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             {"detail": "No executions found."},
@@ -120,25 +117,36 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         metric = self.get_obj()
         seasonality = Metric.objects.get(id=metric.id)['predictor']['seasonality']
         if seasonality:
-            serializer = MetricSeasonalitySerializer(seasonality, many=True)
+            serializer = self.get_serializer(seasonality, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             {"detail": f'No seasonality for metric {metric.id} found.'},
             status=status.HTTP_404_NOT_FOUND
         )
 
-    @action(methods=['POST'], detail=False, url_path='batch', url_name='batch')
-    def post_batch_create(self, *args, **kwargs):
+    @action(
+        methods=['POST'],
+        detail=False,
+        url_path='batch',
+        url_name='batch'
+    )
+    def post_batch_create(self, request, *args, **kwargs):
         """
-        Action that creates a batch of metrics, and calls Prophet to predict values.
+        Action that creates a batch of metrics, and calls a Predictor model to predict values.\n
+        The endpoint accepts a **CSV file** with the following filename format: **"bites_YYYY-MM-DD.csv**",
+        and with the following columns: **[code, est]**.\n
+        The CSV should contain every region for a specific day (specified in the filename), where
+        the "code" is the region code and the "est" is the value.
         """
-        file = self.request.FILES.get('file')
-        content_type = file.content_type
+        serializer = self.get_serializer(data=request.FILES)
+        serializer.is_valid(raise_exception=True)
 
-        # TODO: Check content_type equals to .csv
+        created_metrics = serializer.save()
 
-        # serializer = MetricFileSerializer()
-        return Response({"format": content_type}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"detail": f"File processes successfully. {len(created_metrics)} metrics created"},
+            status=status.HTTP_201_CREATED
+        )
 
     def get_queryset(self):
         """
@@ -167,5 +175,11 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         """
         if self.action == 'retrieve':
             return MetricDetailSerializer
+        elif self.action == 'get_last_date':
+            return LastMetricDateSerializer
+        elif self.action == 'get_seasonality':
+            return MetricSeasonalitySerializer
+        elif self.action == 'post_batch_create':
+            return MetricFileSerializer
 
         return super().get_serializer_class()
