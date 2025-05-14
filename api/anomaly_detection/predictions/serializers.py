@@ -4,7 +4,7 @@ from rest_framework.serializers import (ModelSerializer, Serializer,
 
 from anomaly_detection.geo.serializers import MunicipalitySerializer
 
-from .models import Metric, MetricSeasonality
+from .models import Metric, Predictor
 
 
 class MetricSerializer(ModelSerializer):
@@ -12,9 +12,13 @@ class MetricSerializer(ModelSerializer):
     Serializer for the Metrics.
     """
     region_code = SerializerMethodField()
+    trend = SerializerMethodField()
 
     def get_region_code(self, obj=None) -> str:
         return obj.region.code
+
+    def get_trend(self, obj=None) -> str:
+        return obj.prediction.trend
 
     class Meta:
         model = Metric
@@ -36,12 +40,11 @@ class MetricDetailSerializer(MetricSerializer):
 
 class MetricSeasonalitySerializer(ModelSerializer):
     """
-    Serializer for the Metric Seasonality model.
+    Serializer for the Metric Seasonality associated to the Predictor model.
     """
     class Meta:
-        model = MetricSeasonality
-        fields = ['id', 'index', 'yearly_value']
-        read_only_fields = ['created_at', 'updated_at']
+        model = Predictor
+        fields = ['seasonality']
 
 
 class LastMetricDateSerializer(Serializer):
@@ -49,3 +52,23 @@ class LastMetricDateSerializer(Serializer):
     Serializer for the Metric Executions.
     """
     date = serializers.DateField()
+
+
+class MetricFileSerializer(Serializer):
+    """
+    Serializer for uploading a file with a batch of metrics.
+    """
+    file = serializers.FileField()
+
+    # TODO: def create(): override ...
+    # open csv,
+    # load it with pandas,
+    # order_by
+    # def validate_file
+    # for loop,
+    # Metric.objects.create()
+
+    # transaction for the first step (no prophet)
+
+    class Meta:
+        fields = ['file']

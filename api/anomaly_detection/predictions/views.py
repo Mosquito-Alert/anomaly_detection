@@ -12,10 +12,9 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.predictions.models import (Metric, MetricExecution,
-                                                  MetricSeasonality)
+from anomaly_detection.predictions.models import (Metric, MetricExecution, Predictor)
 from anomaly_detection.predictions.serializers import (
-    LastMetricDateSerializer, MetricDetailSerializer,
+    LastMetricDateSerializer, MetricDetailSerializer, MetricFileSerializer,
     MetricSeasonalitySerializer, MetricSerializer)
 from anomaly_detection.predictions.vector_layers import \
     MetricMunicipalityVectorLayer
@@ -57,22 +56,13 @@ from anomaly_detection.predictions.vector_layers import \
                 required=True,
                 default=datetime.today().strftime('%Y-%m-%d')
             ),
-
-        ]
+        ],
+        # TODO: responses=
     ),
-    get_last_date=extend_schema(methods=['GET'], responses=LastMetricDateSerializer,
+    get_last_date=extend_schema(responses=LastMetricDateSerializer,
                                 operation_id="metrics_last_date_retrieve"),
-    get_seasonality=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='region_code',
-                type=OpenApiTypes.STR,
-                description='Determines the region of the seasonality.',
-                required=True,
-                default='ESP.1.1.1.1_1'
-            ),
-        ]
-    )
+    get_seasonality=extend_schema(responses=MetricSeasonalitySerializer),
+    # TODO: post_batch_create=extend_schema(request=MetricFileSerializer)
 )
 class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
@@ -122,23 +112,33 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
             status=status.HTTP_404_NOT_FOUND
         )
 
-    @action(methods=['GET'], detail=False, url_path='seasonality', url_name='seasonality')
+    @action(methods=['GET'], detail=True, url_path='seasonality', url_name='seasonality')
     def get_seasonality(self, *args, **kwargs):
         """
         Action that returns the seasonality of a specific metric.
         """
-        region_code = self.request.query_params.get('region_code')
-        if region_code is None:
-            raise ValidationError('The query parameter "region_code" is mandatory.')
-
-        seasonality = MetricSeasonality.objects.filter(region__code=region_code)  # .order_by('index')
+        metric = self.get_obj()
+        seasonality = Metric.objects.get(id=metric.id)['predictor']['seasonality']
         if seasonality:
             serializer = MetricSeasonalitySerializer(seasonality, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
-            {"detail": f'No seasonality for region {region_code} found.'},
+            {"detail": f'No seasonality for metric {metric.id} found.'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+    @action(methods=['POST'], detail=False, url_path='batch', url_name='batch')
+    def post_batch_create(self, *args, **kwargs):
+        """
+        Action that creates a batch of metrics, and calls Prophet to predict values.
+        """
+        file = self.request.FILES.get('file')
+        content_type = file.content_type
+
+        # TODO: Check content_type equals to .csv
+
+        # serializer = MetricFileSerializer()
+        return Response({"format": content_type}, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         """
