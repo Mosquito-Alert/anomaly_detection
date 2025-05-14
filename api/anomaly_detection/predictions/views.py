@@ -115,7 +115,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         Action that returns the seasonality of a specific metric.
         """
         metric = self.get_obj()
-        seasonality = Metric.objects.get(id=metric.id)['predictor']['seasonality']
+        seasonality = Metric.objects.get(id=metric.id)['predictor']['yearly_seasonality']
         if seasonality:
             serializer = self.get_serializer(seasonality, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -128,7 +128,8 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         methods=['POST'],
         detail=False,
         url_path='batch',
-        url_name='batch'
+        url_name='batch',
+        # serializer_class # TODO:
     )
     def post_batch_create(self, request, *args, **kwargs):
         """

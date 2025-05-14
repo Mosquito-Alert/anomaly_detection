@@ -1,12 +1,15 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TypedDict
 import pandas as pd
 
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Case, F, Value, When
 from django.utils.translation import gettext_lazy as _
+from prophet import Prophet
+from prophet.plot import seasonality_plot_df
+from prophet.serialize import model_to_json as prophet_model_to_json
 
 
 from anomaly_detection.geo.models import Municipality
@@ -14,9 +17,9 @@ from anomaly_detection.predictions.managers import RegionSelectedManager
 
 
 class PredictionResult(TypedDict):
-    predicted_value: float
-    upper_value: float
-    lower_value: float
+    yhat: float
+    yhat_upper: float
+    yhat_lower: float
 
 
 class Predictor(models.Model):
@@ -30,7 +33,7 @@ class Predictor(models.Model):
         verbose_name=_('Region'),
         help_text=_('The region associated to the predictor.')
     )
-    trained_at = models.DateTimeField(
+    last_training_date = models.DateTimeField(
         null=False,
         blank=False,
         verbose_name=_('Trained at'),
@@ -42,7 +45,7 @@ class Predictor(models.Model):
         verbose_name=_('Weights'),
         help_text=_('The predictor model itself.')
     )
-    seasonality = ArrayField(
+    yearly_seasonality = ArrayField(
         base_field=models.FloatField(),
         size=365,
         null=True,
@@ -65,21 +68,7 @@ class Predictor(models.Model):
         """
         return self.weights is not None
 
-    # @classmethod
-    # def predict(cls, region, value) -> PredictionResult:
-    #     """
-    #     ??????????????
-    #     """
-    #     Predictor.get_preodfa(region, date).predict(date, value)
-    #     obj = cls.objects.filter(
-
-    #     )
-    #     #   prophet = ProphetModel.objects.filter(region_id=self.region_id, train_date__lte=self.date, train_date__gte=(self.date - timedelta(months=1))).order_by('-trained_date').first()
-    #     #   if not prophet:
-    #     #       prophet = ProphetModel.objects.create(region_id=region, train_date=self.date)
-    #     #
-
-        #   @celery.task
+    #   @celery.task(singleton)
     def predict(self, date: datetime, value: float) -> PredictionResult:
         """
         Predicts the values for the specified data.
@@ -92,13 +81,10 @@ class Predictor(models.Model):
         df = pd.DataFrame(tuple(date, value), columns=['ds', 'y'])
         df['cap'] = 1
         df['floor'] = 0
-        forecast = prophet.predict(df).iloc[0]
-        return PredictionResult(
-            predicted_value=forecast['yhat'],
-            upper_value=forecast['yhat_upper'],
-            lower_value=forecast['yhat_lower']
-        )
+        forecast: PredictionResult = prophet.predict(df).iloc[0]
+        return forecast
 
+#   @celery.task(singleton)
     def train(self, force: bool = False) -> None:
         """
         Trains the predictor model with past data.
@@ -106,30 +92,52 @@ class Predictor(models.Model):
         if self.is_trained and not force:
             return
 
-        metrics = Metric.objects.filter(date__lte=self.trained_at, region=self.region)
-        pass
+        metric_qs = Metric.objects.filter(date__lt=self.last_training_date, region=self.region)
 
-#   @celery.task(singleton)
-#   def train(self, force: bool = False, commit: bool = False):
-#       if self.weights and not force:
-#           return
-#
-#       prophet_library.train(before_date=self.trained_at)
-#       self.weights = prophet_library.save(format='json')
-#       if commit:
-#           self.save(update_fields=['weights'])
+        df = pd.DataFrame.from_records(
+            ({'ds': obj.date, 'y': obj.value} for obj in metric_qs.iterator())  # Generator
+        )
+        # TODO: Apply Savitzky-Golay filter with safeguards. Maybe, create a new field in Metric (smoothed_value)
+
+        first_non_zero = df[df["y"] != 0].iloc[0]
+        holidays_df = df[(df['y'] == 0) & (df['ds'] < first_non_zero['ds'])]['ds'].reset_index()
+        holidays_df['holiday'] = 'no-prediction-yet'
+
+        model = Prophet(growth='logistic', yearly_seasonality=True, weekly_seasonality=False,
+                        daily_seasonality=False, holidays=holidays_df[['ds', 'holiday']])
+        # Logistic growth and boundaries between 0 and 1 are specifict to the bite risk model, which value is a
+        # probability. If ever needs to use other kind of metric set the boundaries on the MetricType model.
+        df.loc[:, 'cap'] = 1
+        df.loc[:, 'floor'] = 0
+        model.fit(df)
+
+        # Trend
+        future = model.make_future_dataframe(periods=0)
+        future['cap'] = 1  # Ensure the future data has the cap
+        future['floor'] = 0  # Ensure the future data has the floor
+        forecast = model.predict(future)
+
+        # Seasonality
+        df_w = seasonality_plot_df(m=model, ds=pd.date_range(start='2017-01-01', periods=365))
+        seas_df = model.predict_seasonal_components(df_w)
+
+        # Save
+        self.weights = prophet_model_to_json(model)
+        self.trend = forecast['trend'].to_list()
+        self.yearly_seasonality = seas_df['yearly'].reset_index().to_list()
+        self.save()
 
     def __str__(self):
-        return f"Predictor for the region {self.region.name} for the model predicted in {self.trained_at}"
+        return f"Predictor for the region {self.region.name} for the model predicted in {self.last_training_date}"
 
     class Meta:
-        ordering = ['region', '-trained_at']
+        ordering = ['region', '-last_training_date']
         indexes = [
-            models.Index(fields=['region', 'trained_at'])
+            models.Index(fields=['region', 'last_training_date'])
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=['region', 'trained_at'], name='unique_predictor'
+                fields=['region', 'last_training_date'], name='unique_predictor'
             )
         ]
         verbose_name = 'Predictor'
@@ -155,8 +163,8 @@ class Metric(models.Model):
         Predictor,
         on_delete=models.RESTRICT,
         related_name="metrics",
-        null=True,  # ! CHECK: If this is possible
-        blank=True,
+        null=False,
+        blank=False,
         verbose_name=_('Predictor'),
         help_text=_('The predictor which has the model and the predicted values associaded to the metric.')
     )
@@ -221,32 +229,41 @@ class Metric(models.Model):
 
     objects = RegionSelectedManager()
 
-    # TODO: override save
-    # change "predict" to a more fitting name (refresh_prediction, estimate, etc.)
-
-    def predict(self):
-        result: PredictionResult = Predictor.predict(data=(self.date, self.value))
-        self.upper_value = result.upper_value
+    def refresh_prediction(self):
+        """
+        Invokes the predictor and assign the Prediction fields.
+        """
+        result: PredictionResult = self.predictor.predict(data=(self.date, self.value))
+        self.predicted_value = result.yhat
+        self.upper_value = result.yhat_upper
+        self.lower_value = result.yhat_lower
         self.save()
+        # CHECK: For race conditions
+        MetricPredictionProgress.refresh(date=self.date)
 
-    # @celery.task
-    # def predict(self) --> prophet y update
-    #   prophet = ProphetModel.objects.filter(region_id=self.region_id, train_date__lte=self.date, train_date__gte=(self.date - timedelta(months=1))).order_by('-trained_date').first()
-    #   if not prophet:
-    #       prophet = ProphetModel.objects.create(region_id=region, train_date=self.date)
-    #
-    #   predictions = await prophet.predict()
-    #   self.fields____ = predictions.y_hat
-    #   self.save()
+    def save(self, *args, **kwargs):
+        is_adding = self._state.adding  # A new object is being created
 
-    # def save(self, *args, **kwargs):
-    #   is_adding = self._state.adding
-    #
-    #   super().save(*args, **kwargs)
-    #
-    #   if is_adding:
-    #       self.predict()
-    #   MetricExecution.objects.get(date=self.date).refresh()
+        if not self.predictor:
+            # TODO: self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=self.date)
+            try:
+                self.predictor = Predictor.objects.filter(
+                    region_id=self.region_id,
+                    last_training_date__lte=self.date,
+                    last_training_date__gte=(self.date - timedelta(months=1))
+                ).latest('last_training_date')
+            except Predictor.DoesNotExist:
+                self.predictor = Predictor.objects.create(
+                    region_id=self.region_id,
+                    last_training_date=self.date
+                )
+
+        # Save the initial Metric with the prediction values and the predictor to None.
+        super().save(*args, **kwargs)
+
+        # Assign a preditor to the Metric and set the prediction values.
+        if is_adding:
+            self.refresh_prediction()
 
     def __str__(self):
         return f"Bites Index Metric for {self.region.name} on {self.date}: {self.value}"
@@ -266,9 +283,9 @@ class Metric(models.Model):
         verbose_name_plural = 'Metrics'
 
 
-class MetricExecution(models.Model):
+class MetricPredictionProgress(models.Model):
     """
-    Model to store the data prediction execution information.
+    Model to store the data prediction progress information.
     Every time the metrics are updated, a prediction will be executed.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -283,20 +300,27 @@ class MetricExecution(models.Model):
     success_percentage = models.FloatField(
         null=False,
         blank=False,
+        default=0,
         verbose_name=_('Success percentage'),
         help_text=_('The percentage of success of the execution.')
     )
 
+    @classmethod
+    def refresh(cls, date: datetime):
+        with transaction.atomic:
+            metrics_qs = Metric.objects.select_for_update().filter(date=date)
+            total = metrics_qs.count()
+            # total_finished = metrics_qs.predicted()
+            total_finished = metrics_qs.filter(predicted_value__isnull=True)
+
+            perc = 0
+            if total_finished != 0:
+                perc = total_finished/total
+
+            cls.objects.update_or_create(date=date, defaults={'success_percentage': perc})
+
     def __str__(self):
         return f"Metric Execution of the day {self.date} with result: {self.success_percentage}"
-
-    # def refresh(self):
-    #     qs = Metric.objects.filter(date=self.date)
-    #     total = qs.count()
-    #     total_finished = qs.filter(upper_bound__isnull=False).count()
-
-    #     self.success_percentage = total_finished/total
-    #     self.save(update_fields=['success_percentage'])
 
     class Meta:
         ordering = ['date']

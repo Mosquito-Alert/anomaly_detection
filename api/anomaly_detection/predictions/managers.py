@@ -25,3 +25,6 @@ class RegionSelectedManager(Manager):
         return super().get_queryset().select_related('region').prefetch_related(
             Prefetch('region', queryset=Municipality.objects.with_geometry())  # .filter(pk=OuterRef('region'))
         )
+
+# class PredictorManager(Manager):
+    # TODO: get_not_expire(region_id, date)

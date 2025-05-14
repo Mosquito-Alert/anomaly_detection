@@ -49,7 +49,12 @@ class MetricSeasonalitySerializer(ModelSerializer):
     """
     class Meta:
         model = Predictor
-        fields = ['seasonality']
+        fields = ['yearly']
+        extra_kwargs = {
+            'yearly': {
+                'source': 'yearly_seasonality'
+            }
+        }
 
 
 class LastMetricDateSerializer(Serializer):
@@ -67,7 +72,7 @@ class MetricFileSerializer(Serializer):
 
     def validate_file(self, file):
         """
-        Validate if the file is a CSV file.
+        Validate if the file is a CSV file and has the correct format.
         """
         # Check content type and extension
         if file.content_type != 'text/csv':
@@ -129,5 +134,6 @@ class MetricFileSerializer(Serializer):
 
         return created_metrics
 
+        # CHECK:
         # order_by
         # transaction for the first step (no prophet)
