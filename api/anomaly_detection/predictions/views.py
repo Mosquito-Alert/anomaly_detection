@@ -12,7 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.predictions.models import Metric, MetricExecution
+from anomaly_detection.predictions.models import Metric, MetricPredictionProgress
 from anomaly_detection.predictions.serializers import (
     LastMetricDateSerializer, MetricDetailSerializer, MetricFileSerializer,
     MetricSeasonalitySerializer, MetricSerializer)
@@ -95,12 +95,18 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         content, status = self.get_content_status(z, x, y)
         return Response(content, status=status)
 
-    @action(methods=['GET'], detail=False, url_path='dates/last', url_name='last-date')
+    @action(
+        methods=['GET'],
+        detail=False,
+        url_path='dates/last',
+        url_name='last-date',
+        serializer_class=LastMetricDateSerializer
+    )
     def get_last_date(self, *args, **kwargs):
         """
         Action that returns the last date in which there are metrics available.
         """
-        last_execution = MetricExecution.objects.filter(success_percentage__gte=0.95).order_by("-date").first()
+        last_execution = MetricPredictionProgress.objects.filter(success_percentage__gte=0.95).order_by("-date").first()
         if last_execution:
             serializer = self.get_serializer({"date": last_execution.date})
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -109,7 +115,13 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
             status=status.HTTP_404_NOT_FOUND
         )
 
-    @action(methods=['GET'], detail=True, url_path='seasonality', url_name='seasonality')
+    @action(
+        methods=['GET'],
+        detail=True,
+        url_path='seasonality',
+        url_name='seasonality',
+        serializer_class=MetricSeasonalitySerializer
+    )
     def get_seasonality(self, *args, **kwargs):
         """
         Action that returns the seasonality of a specific metric.
@@ -129,7 +141,9 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         detail=False,
         url_path='batch',
         url_name='batch',
-        # serializer_class # TODO:
+        serializer_class=MetricFileSerializer,
+        # TODO: authentication_classes = [TokenAuthentication]
+        # TODO: permission_classes = [IsAuthenticated]
     )
     def post_batch_create(self, request, *args, **kwargs):
         """
@@ -176,11 +190,5 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         """
         if self.action == 'retrieve':
             return MetricDetailSerializer
-        elif self.action == 'get_last_date':
-            return LastMetricDateSerializer
-        elif self.action == 'get_seasonality':
-            return MetricSeasonalitySerializer
-        elif self.action == 'post_batch_create':
-            return MetricFileSerializer
 
         return super().get_serializer_class()

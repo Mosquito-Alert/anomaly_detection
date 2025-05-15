@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db.models import Manager, Prefetch
 
 from anomaly_detection.geo.models import Municipality
@@ -5,7 +6,7 @@ from anomaly_detection.geo.models import Municipality
 
 class RegionSelectedManager(Manager):
     """
-    Custom manager for the Region model.
+    Custom manager for the Metric model with the Region selected.
     """
 
     def get_queryset(self):
@@ -26,5 +27,18 @@ class RegionSelectedManager(Manager):
             Prefetch('region', queryset=Municipality.objects.with_geometry())  # .filter(pk=OuterRef('region'))
         )
 
-# class PredictorManager(Manager):
-    # TODO: get_not_expire(region_id, date)
+
+class PredictorManager(Manager):
+    """
+    Custom manager for the Predictor model.
+    """
+
+    def get_not_expired(self, region_id, date):
+        """
+        Get the last predictor that is not expired for a given region and date.
+        """
+        return super().get_queryset().filter(
+            region_id=region_id,
+            last_training_date__lte=date,
+            last_training_date__gte=(date - timedelta(days=self.model.EXPIRY_DAYS))
+        ).latest('last_training_date')

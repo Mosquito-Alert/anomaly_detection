@@ -22,18 +22,20 @@ from drf_spectacular.views import (SpectacularAPIView, SpectacularJSONAPIView,
 
 from project import settings
 
+base_url = "api/v1"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("api/schema/openapi.yml", SpectacularAPIView.as_view(api_version='v1'), name="api-schema"),
-    path("api/schema/openapi.json", SpectacularJSONAPIView.as_view(api_version='v1'), name="api-schema-json"),
+    path(f'{base_url}/schema/openapi.yml', SpectacularAPIView.as_view(api_version='v1'), name='api-schema'),
+    path(f'{base_url}/schema/openapi.json', SpectacularJSONAPIView.as_view(api_version='v1'), name='api-schema-json'),
     path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="api-schema",),
-        name="swagger-ui"
+        f'{base_url}/docs/',
+        SpectacularSwaggerView.as_view(url_name='api-schema',),
+        name='swagger-ui'
     ),
-    path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='api-schema'), name='redoc'),
-    path('api/', include('anomaly_detection.predictions.urls', namespace='predictions')),
-    path('api/', include('anomaly_detection.geo.urls', namespace='geo')),
+    path(f'{base_url}/docs/redoc/', SpectacularRedocView.as_view(url_name='api-schema'), name='redoc'),
+    path(f'{base_url}/', include('anomaly_detection.predictions.urls', namespace='predictions')),
+    path(f'{base_url}/', include('anomaly_detection.geo.urls', namespace='geo')),
 ]
 
 

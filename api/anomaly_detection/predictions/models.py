@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime, timedelta
-from typing import TypedDict
+from datetime import datetime
+from typing import Optional, TypedDict
 import pandas as pd
 
 from django.contrib.postgres.fields import ArrayField
@@ -13,7 +13,7 @@ from prophet.serialize import model_to_json as prophet_model_to_json
 
 
 from anomaly_detection.geo.models import Municipality
-from anomaly_detection.predictions.managers import RegionSelectedManager
+from anomaly_detection.predictions.managers import PredictorManager, RegionSelectedManager
 
 
 class PredictionResult(TypedDict):
@@ -26,6 +26,9 @@ class Predictor(models.Model):
     """
     Model to store the predictor model and the prediction results.
     """
+    EXPIRY_DAYS = 30
+    MIN_DAYS_FOR_TRAINING = 60
+
     region = models.ForeignKey(
         Municipality,
         on_delete=models.CASCADE,
@@ -45,6 +48,7 @@ class Predictor(models.Model):
         verbose_name=_('Weights'),
         help_text=_('The predictor model itself.')
     )
+    # ! CAREFUL: The type ArrayField only works in PostgreSQL
     yearly_seasonality = ArrayField(
         base_field=models.FloatField(),
         size=365,
@@ -52,7 +56,7 @@ class Predictor(models.Model):
         blank=True,
         verbose_name=_('Seasonality'),
         help_text=_('The predicted seasonality for the metric.')
-    )  # TODO: What if I have another database?
+    )
     trend = ArrayField(
         base_field=models.FloatField(),
         null=True,
@@ -60,6 +64,8 @@ class Predictor(models.Model):
         verbose_name=_('Trend'),
         help_text=_('The predicted serial tendency for the metric.')
     )
+
+    objects = PredictorManager()
 
     @property
     def is_trained(self) -> bool:
@@ -69,13 +75,17 @@ class Predictor(models.Model):
         return self.weights is not None
 
     #   @celery.task(singleton)
-    def predict(self, date: datetime, value: float) -> PredictionResult:
+    def predict(self, date: datetime, value: float) -> Optional[PredictionResult]:
         """
         Predicts the values for the specified data.
         """
         from prophet.serialize import model_from_json
         if not self.is_trained:
             self.train()
+        if not self.is_trained:
+            # This second comprobation is needed for the first iterations (first 30 days)
+            return
+
         prophet = model_from_json(self.weights)
 
         df = pd.DataFrame(tuple(date, value), columns=['ds', 'y'])
@@ -93,6 +103,10 @@ class Predictor(models.Model):
             return
 
         metric_qs = Metric.objects.filter(date__lt=self.last_training_date, region=self.region)
+
+        if metric_qs.count() < self.MIN_DAYS_FOR_TRAINING:
+            # If there are not enough data to train the model, do not train it.
+            return
 
         df = pd.DataFrame.from_records(
             ({'ds': obj.date, 'y': obj.value} for obj in metric_qs.iterator())  # Generator
@@ -245,13 +259,8 @@ class Metric(models.Model):
         is_adding = self._state.adding  # A new object is being created
 
         if not self.predictor:
-            # TODO: self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=self.date)
             try:
-                self.predictor = Predictor.objects.filter(
-                    region_id=self.region_id,
-                    last_training_date__lte=self.date,
-                    last_training_date__gte=(self.date - timedelta(months=1))
-                ).latest('last_training_date')
+                self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=self.date)
             except Predictor.DoesNotExist:
                 self.predictor = Predictor.objects.create(
                     region_id=self.region_id,

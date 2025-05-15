@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from anomaly_detection.predictions.models import Metric, MetricExecution
+from anomaly_detection.predictions.models import Metric, MetricPredictionProgress
 
 
 @admin.register(Metric)
@@ -42,8 +42,8 @@ class MetricAdmin(admin.ModelAdmin):
 #     readonly_fields = ['created_at', 'updated_at']
 
 
-@admin.register(MetricExecution)
-class MetricExecutionAdmin(admin.ModelAdmin):
+@admin.register(MetricPredictionProgress)
+class MetricPredictionProgressAdmin(admin.ModelAdmin):
     list_display = ('id', 'date', 'success_percentage')
     list_filter = ['date']
     ordering = ['-date']
