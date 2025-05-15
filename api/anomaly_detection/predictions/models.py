@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from prophet import Prophet
 from prophet.plot import seasonality_plot_df
 from prophet.serialize import model_to_json as prophet_model_to_json
+from rest_framework.fields import MaxValueValidator, MinValueValidator
 
 
 from anomaly_detection.geo.models import Municipality
@@ -88,10 +89,13 @@ class Predictor(models.Model):
 
         prophet = model_from_json(self.weights)
 
-        df = pd.DataFrame(tuple(date, value), columns=['ds', 'y'])
+        df = pd.DataFrame([(date, value)], columns=['ds', 'y'])
         df['cap'] = 1
         df['floor'] = 0
-        forecast: PredictionResult = prophet.predict(df).iloc[0]
+        try:
+            forecast: PredictionResult = prophet.predict(df).iloc[0]
+        except Exception as e:
+            raise Exception(f"Error predicting the values: {str(e)}")
         return forecast
 
 #   @celery.task(singleton)
@@ -102,23 +106,36 @@ class Predictor(models.Model):
         if self.is_trained and not force:
             return
 
-        metric_qs = Metric.objects.filter(date__lt=self.last_training_date, region=self.region)
-
-        if metric_qs.count() < self.MIN_DAYS_FOR_TRAINING:
-            # If there are not enough data to train the model, do not train it.
-            return
+        # NOTE: Do not delete the order by date, as it is needed for the Prophet model.
+        metric_qs = Metric.objects.filter(date__lt=self.last_training_date, region=self.region).order_by('date')
 
         df = pd.DataFrame.from_records(
             ({'ds': obj.date, 'y': obj.value} for obj in metric_qs.iterator())  # Generator
         )
         # TODO: Apply Savitzky-Golay filter with safeguards. Maybe, create a new field in Metric (smoothed_value)
 
-        first_non_zero = df[df["y"] != 0].iloc[0]
-        holidays_df = df[(df['y'] == 0) & (df['ds'] < first_non_zero['ds'])]['ds'].reset_index()
-        holidays_df['holiday'] = 'no-prediction-yet'
+        if (df['y'].isna()).all() or (df['y'].eq(0)).all():
+            return
 
-        model = Prophet(growth='logistic', yearly_seasonality=True, weekly_seasonality=False,
-                        daily_seasonality=False, holidays=holidays_df[['ds', 'holiday']])
+        first_non_zero = df[df["y"] != 0].iloc[0]
+        df_first_zeros = df[(df['y'] == 0) & (df['ds'] < first_non_zero['ds'])]['ds'].reset_index()
+        df_first_zeros['holiday'] = 'no-prediction-yet'
+
+        if (len(df) - len(df_first_zeros)) <= self.MIN_DAYS_FOR_TRAINING:
+            # If there are not enough quality data to train the model, do not train it.
+            return
+
+        try:
+            # We take advantage of the holidays feature of the Prophet model to avoid training with no quality data.
+            model = Prophet(
+                growth='logistic',
+                yearly_seasonality=True,
+                weekly_seasonality=False,
+                daily_seasonality=False,
+                holidays=df_first_zeros[['ds', 'holiday']] if df_first_zeros else None,
+            )
+        except Exception as e:
+            raise Exception(f"Error creating the Prophet model: {str(e)}")
         # Logistic growth and boundaries between 0 and 1 are specifict to the bite risk model, which value is a
         # probability. If ever needs to use other kind of metric set the boundaries on the MetricType model.
         df.loc[:, 'cap'] = 1
@@ -212,7 +229,7 @@ class Metric(models.Model):
     upper_value = models.FloatField(
         null=True,
         blank=True,
-        verbose_name=_('Lower value'),
+        verbose_name=_('Upper value'),
         help_text=_('The predicted upper band value of the metric, from which values will be \
             considerated as anomalies. This value will be estimated at creation.')
     )
@@ -247,11 +264,15 @@ class Metric(models.Model):
         """
         Invokes the predictor and assign the Prediction fields.
         """
-        result: PredictionResult = self.predictor.predict(data=(self.date, self.value))
-        self.predicted_value = result.yhat
-        self.upper_value = result.yhat_upper
-        self.lower_value = result.yhat_lower
-        self.save()
+        try:
+            result: PredictionResult = self.predictor.predict(data=(self.date, self.value))
+            self.predicted_value = result.yhat
+            self.upper_value = result.yhat_upper
+            self.lower_value = result.yhat_lower
+            self.save()
+        except Exception as e:
+            raise Exception(f"Error during prediction: {str(e)}")
+
         # CHECK: For race conditions
         MetricPredictionProgress.refresh(date=self.date)
 
@@ -311,20 +332,21 @@ class MetricPredictionProgress(models.Model):
         blank=False,
         default=0,
         verbose_name=_('Success percentage'),
-        help_text=_('The percentage of success of the execution.')
+        help_text=_('The percentage of success of the execution.'),
+        validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
 
     @classmethod
     def refresh(cls, date: datetime):
-        with transaction.atomic:
+        with transaction.atomic():
             metrics_qs = Metric.objects.select_for_update().filter(date=date)
             total = metrics_qs.count()
             # total_finished = metrics_qs.predicted()
-            total_finished = metrics_qs.filter(predicted_value__isnull=True)
+            total_finished = metrics_qs.filter(predicted_value__isnull=False).count()
 
             perc = 0
-            if total_finished != 0:
-                perc = total_finished/total
+            if total > 0:
+                perc = total_finished / total
 
             cls.objects.update_or_create(date=date, defaults={'success_percentage': perc})
 
