@@ -4,9 +4,11 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (OpenApiParameter, OpenApiResponse, extend_schema,
                                    extend_schema_view)
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
@@ -142,8 +144,8 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         url_path='batch',
         url_name='batch',
         serializer_class=MetricFileSerializer,
-        # TODO: authentication_classes = [TokenAuthentication]
-        # TODO: permission_classes = [IsAuthenticated]
+        authentication_classes=[TokenAuthentication],
+        permission_classes=[IsAuthenticated]
     )
     def post_batch_create(self, request, *args, **kwargs):
         """
