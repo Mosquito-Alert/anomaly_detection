@@ -1,10 +1,12 @@
 from datetime import datetime
 import re
+import numpy as np
 import pandas as pd
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (ModelSerializer, Serializer,
                                         SerializerMethodField)
+from tqdm import tqdm
 
 from anomaly_detection.geo.models import Municipality
 from anomaly_detection.geo.serializers import MunicipalitySerializer
@@ -90,6 +92,8 @@ class MetricFileSerializer(Serializer):
         date_str = match.group(1)
         try:
             parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            if parsed_date > datetime.now().date():
+                raise ValidationError('Date cannot be in the future.')
         except ValueError:
             raise ValidationError(f"Invalid date in filename: {date_str}")
 
@@ -118,22 +122,22 @@ class MetricFileSerializer(Serializer):
         if df.empty:
             raise ValidationError("The uploaded CSV file is empty — no rows found.")
 
-        created_metrics = []
+        region_code_to_id = {obj.code: obj.id for obj in Municipality.objects.all()}
+
+        metrics_to_create = []
         for idx, row in df.iterrows():
-            try:
-                region = Municipality.objects.get(code=row['code'])
-                metric = Metric.objects.create(
-                    region=region,
-                    predictor=None,
+            metrics_to_create.append(
+                Metric(
+                    region_id=region_code_to_id[row['code']],
                     date=date,
-                    value=row['est'],
+                    value=row['est'] if not row['est'] == np.nan else None,
                 )
-                created_metrics.append(metric)
-            except Exception as e:
-                raise ValidationError(f"Error in row {idx + 1}: {str(e)}")
+            )
 
-        return created_metrics
+        # Create the metrics without the prediction values
+        objs = Metric.objects.bulk_create(metrics_to_create, batch_size=2000)
 
-        # CHECK:
-        # order_by
-        # transaction for the first step (no prophet)
+        # Perform prediction for each metric
+        for metric in tqdm(objs, total=len(objs)):
+            metric.refresh_prediction()
+        return objs

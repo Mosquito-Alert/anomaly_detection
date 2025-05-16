@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key")
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = os.environ.get("DEBUG", "False") == 'True'
+DEBUG = os.environ.get("DEBUG", "False").lower() == 'true'
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
@@ -43,7 +43,6 @@ THIRD_PARTY_APPS = [
     'silk',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_gis',
     'drf_spectacular',
 ]
 

@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import Case, F, Value, When
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from prophet import Prophet
 from prophet.plot import seasonality_plot_df
 from prophet.serialize import model_to_json as prophet_model_to_json
@@ -92,10 +93,9 @@ class Predictor(models.Model):
         df = pd.DataFrame([(date, value)], columns=['ds', 'y'])
         df['cap'] = 1
         df['floor'] = 0
-        try:
-            forecast: PredictionResult = prophet.predict(df).iloc[0]
-        except Exception as e:
-            raise Exception(f"Error predicting the values: {str(e)}")
+        forecast: PredictionResult = PredictionResult(
+            **prophet.predict(df).iloc[0][['yhat', 'yhat_lower', 'yhat_upper']].to_dict()
+        )
         return forecast
 
 #   @celery.task(singleton)
@@ -103,6 +103,16 @@ class Predictor(models.Model):
         """
         Trains the predictor model with past data.
         """
+        # We need to set the logger to avoid the warning of the prophet library.
+        import logging
+        logger = logging.getLogger('cmdstanpy')
+        logger.addHandler(logging.NullHandler())
+        logger.propagate = False
+        logger.setLevel(logging.CRITICAL)
+
+        import warnings
+        warnings.filterwarnings("ignore", category=pd.errors.SettingWithCopyWarning)
+
         if self.is_trained and not force:
             return
 
@@ -114,28 +124,23 @@ class Predictor(models.Model):
         )
         # TODO: Apply Savitzky-Golay filter with safeguards. Maybe, create a new field in Metric (smoothed_value)
 
-        if (df['y'].isna()).all() or (df['y'].eq(0)).all():
+        if df.empty or df['y'].isna().all() or df['y'].eq(0).all():
             return
 
         first_non_zero = df[df["y"] != 0].iloc[0]
-        df_first_zeros = df[(df['y'] == 0) & (df['ds'] < first_non_zero['ds'])]['ds'].reset_index()
-        df_first_zeros['holiday'] = 'no-prediction-yet'
+        # See: https://facebook.github.io/prophet/docs/outliers.html
+        df.loc[df['ds'] < first_non_zero['ds'], "y"] = None
 
-        if (len(df) - len(df_first_zeros)) <= self.MIN_DAYS_FOR_TRAINING:
+        if df["y"].count() < self.MIN_DAYS_FOR_TRAINING:
             # If there are not enough quality data to train the model, do not train it.
             return
 
-        try:
-            # We take advantage of the holidays feature of the Prophet model to avoid training with no quality data.
-            model = Prophet(
-                growth='logistic',
-                yearly_seasonality=True,
-                weekly_seasonality=False,
-                daily_seasonality=False,
-                holidays=df_first_zeros[['ds', 'holiday']] if df_first_zeros else None,
-            )
-        except Exception as e:
-            raise Exception(f"Error creating the Prophet model: {str(e)}")
+        model = Prophet(
+            growth='logistic',
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+        )
         # Logistic growth and boundaries between 0 and 1 are specifict to the bite risk model, which value is a
         # probability. If ever needs to use other kind of metric set the boundaries on the MetricType model.
         df.loc[:, 'cap'] = 1
@@ -155,7 +160,7 @@ class Predictor(models.Model):
         # Save
         self.weights = prophet_model_to_json(model)
         self.trend = forecast['trend'].to_list()
-        self.yearly_seasonality = seas_df['yearly'].reset_index().to_list()
+        self.yearly_seasonality = seas_df.reset_index(inplace=False)['yearly'].to_list()
         self.save()
 
     def __str__(self):
@@ -194,8 +199,8 @@ class Metric(models.Model):
         Predictor,
         on_delete=models.RESTRICT,
         related_name="metrics",
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         verbose_name=_('Predictor'),
         help_text=_('The predictor which has the model and the predicted values associaded to the metric.')
     )
@@ -208,8 +213,8 @@ class Metric(models.Model):
         help_text=_('The date of the metric.')
     )
     value = models.FloatField(
-        null=False,
-        blank=False,
+        null=True,
+        blank=True,
         verbose_name=_('Value'),
         help_text=_('The actual value of the metric.')
     )
@@ -264,29 +269,37 @@ class Metric(models.Model):
         """
         Invokes the predictor and assign the Prediction fields.
         """
-        try:
-            result: PredictionResult = self.predictor.predict(data=(self.date, self.value))
-            self.predicted_value = result.yhat
-            self.upper_value = result.yhat_upper
-            self.lower_value = result.yhat_lower
+        aware_datetime = timezone.make_aware(
+            datetime.combine(self.date, datetime.min.time())
+        )
+        # CHECK: The getattr(self, 'predictor', None) if the create is invoked with a predictor
+        # CHECK: Same with predictor_id
+        if not getattr(self, 'predictor', None):
+            try:
+                self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=aware_datetime)
+            except Predictor.DoesNotExist:
+
+                self.predictor = Predictor.objects.create(
+                    region_id=self.region_id,
+                    last_training_date=aware_datetime,
+                )
+            finally:
+                self.save(update_fields=['predictor'])
+
+        # Convert timezone-aware datetime to naive datetime for Prophet
+        naive_datetime = timezone.make_naive(aware_datetime)
+
+        if result := self.predictor.predict(date=naive_datetime, value=self.value):
+            self.predicted_value = result['yhat']
+            self.upper_value = result['yhat_upper']
+            self.lower_value = result['yhat_lower']
             self.save()
-        except Exception as e:
-            raise Exception(f"Error during prediction: {str(e)}")
 
         # CHECK: For race conditions
         MetricPredictionProgress.refresh(date=self.date)
 
     def save(self, *args, **kwargs):
         is_adding = self._state.adding  # A new object is being created
-
-        if not self.predictor:
-            try:
-                self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=self.date)
-            except Predictor.DoesNotExist:
-                self.predictor = Predictor.objects.create(
-                    region_id=self.region_id,
-                    last_training_date=self.date
-                )
 
         # Save the initial Metric with the prediction values and the predictor to None.
         super().save(*args, **kwargs)

@@ -12,3 +12,4 @@ pytest-django>=4.11.1,<4.12
 # Others
 geopandas>=1.0.1,<1.1
 prophet>=1.1.6,<1.2
+tqdm>=4.67.1,<4.68
