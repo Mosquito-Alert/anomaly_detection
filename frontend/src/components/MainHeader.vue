@@ -1,6 +1,5 @@
 <template>
   <q-header class="bg-white text-black">
-      <!-- TODO: Make a separated component with the logic -->
       <q-toolbar>
         <q-avatar square>
           <img src="~assets/logo.png">
