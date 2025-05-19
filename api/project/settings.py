@@ -160,4 +160,8 @@ SPECTACULAR_SETTINGS = {
         'url': None,
     },
     'COMPONENT_SPLIT_REQUEST': True,  # So we can upload images through the UI.
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+    }
 }

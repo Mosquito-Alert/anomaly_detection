@@ -1,5 +1,25 @@
 services:
-  api:
+  db:
+    image: postgis/postgis:17-3.5 # 12.3. # TODO: Downgrade a Postgres 15
+    container_name: anomaly-detection-local-db
+    hostname: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - anomaly-detection-local-db_data:/var/lib/postgresql/data
+      - anomaly-detection-local-db_data_backups:/backups
+    env_file:
+      - ./api/.envs/.local/.postgres.env
+    # command: "-c log_statement=all"
+
+  broker:
+    image: rabbitmq:4.1.0-management
+    container_name: anomaly-detection-local-broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api: &api
     build:
       context: ./api
       args:
@@ -22,19 +42,24 @@ services:
     #   start_period: 10s
     depends_on:
       - db
+      - broker
 
-  db:
-    image: postgis/postgis:17-3.5 # 12.3. # TODO: Downgrade a Postgres 15
-    container_name: anomaly-detection-local-db
-    hostname: db
+  worker:
+    <<: *api
+    container_name: anomaly-detection-local-worker
+    hostname: worker
+    ports: []
+    command: celery -A project worker -l INFO
+
+
+  worker_flower:
+    <<: *api
+    container_name: anomaly-detection-local-flower
+    hostname: flower
     ports:
-      - "5432:5432"
-    volumes:
-      - anomaly-detection-local-db_data:/var/lib/postgresql/data
-      - anomaly-detection-local-db_data_backups:/backups
-    env_file:
-      - ./api/.envs/.local/.postgres.env
-    # command: "-c log_statement=all"
+      - "5555:5555"
+    command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
+
 
 volumes:
   anomaly-detection-local-db_data:

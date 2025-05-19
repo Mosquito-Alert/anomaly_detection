@@ -7,7 +7,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
 from django.db.models import Case, F, Value, When
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 from prophet import Prophet
 from prophet.plot import seasonality_plot_df
 from prophet.serialize import model_to_json as prophet_model_to_json
@@ -16,6 +15,7 @@ from rest_framework.fields import MaxValueValidator, MinValueValidator
 
 from anomaly_detection.geo.models import Municipality
 from anomaly_detection.predictions.managers import PredictorManager, RegionSelectedManager
+from anomaly_detection.predictions.tasks import refresh_prediction_task
 
 
 class PredictionResult(TypedDict):
@@ -267,36 +267,9 @@ class Metric(models.Model):
 
     def refresh_prediction(self):
         """
-        Invokes the predictor and assign the Prediction fields.
+        (Async) Invokes the predictor and assign the Prediction fields.
         """
-        aware_datetime = timezone.make_aware(
-            datetime.combine(self.date, datetime.min.time())
-        )
-        # CHECK: The getattr(self, 'predictor', None) if the create is invoked with a predictor
-        # CHECK: Same with predictor_id
-        if not getattr(self, 'predictor', None):
-            try:
-                self.predictor = Predictor.objects.get_not_expired(region_id=self.region, date=aware_datetime)
-            except Predictor.DoesNotExist:
-
-                self.predictor = Predictor.objects.create(
-                    region_id=self.region_id,
-                    last_training_date=aware_datetime,
-                )
-            finally:
-                self.save(update_fields=['predictor'])
-
-        # Convert timezone-aware datetime to naive datetime for Prophet
-        naive_datetime = timezone.make_naive(aware_datetime)
-
-        if result := self.predictor.predict(date=naive_datetime, value=self.value):
-            self.predicted_value = result['yhat']
-            self.upper_value = result['yhat_upper']
-            self.lower_value = result['yhat_lower']
-            self.save()
-
-        # CHECK: For race conditions
-        MetricPredictionProgress.refresh(date=self.date)
+        refresh_prediction_task.delay(self.id)
 
     def save(self, *args, **kwargs):
         is_adding = self._state.adding  # A new object is being created
@@ -371,5 +344,5 @@ class MetricPredictionProgress(models.Model):
         indexes = [
             models.Index(fields=['-date'])
         ]
-        verbose_name = "Metric Execution"
-        verbose_name_plural = "Metric Executions"
+        verbose_name = "Metric Prediction Progress"
+        verbose_name_plural = "Metric Prediction Progressses"
