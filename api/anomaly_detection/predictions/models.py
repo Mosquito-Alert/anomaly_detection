@@ -76,7 +76,6 @@ class Predictor(models.Model):
         """
         return self.weights is not None
 
-    #   @celery.task(singleton)
     def predict(self, date: datetime, value: float) -> Optional[PredictionResult]:
         """
         Predicts the values for the specified data.
@@ -98,7 +97,6 @@ class Predictor(models.Model):
         )
         return forecast
 
-#   @celery.task(singleton)
     def train(self, force: bool = False) -> None:
         """
         Trains the predictor model with past data.
@@ -265,11 +263,11 @@ class Metric(models.Model):
 
     objects = RegionSelectedManager()
 
-    def refresh_prediction(self):
+    def refresh_prediction(self, refresh_progress: bool = True) -> None:
         """
         (Async) Invokes the predictor and assign the Prediction fields.
         """
-        refresh_prediction_task.delay(self.id)
+        refresh_prediction_task.delay(self.id, refresh_progress=refresh_progress)
 
     def save(self, *args, **kwargs):
         is_adding = self._state.adding  # A new object is being created

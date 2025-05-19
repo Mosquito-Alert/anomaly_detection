@@ -161,7 +161,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         created_metrics = serializer.save()
 
         return Response(
-            {"detail": f"File processes successfully. {len(created_metrics)} metrics created"},
+            {"detail": f"File processed successfully. {len(created_metrics)} metrics created"},
             status=status.HTTP_201_CREATED
         )
 

@@ -6,7 +6,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (ModelSerializer, Serializer,
                                         SerializerMethodField)
-from tqdm import tqdm
 
 from anomaly_detection.geo.models import Municipality
 from anomaly_detection.geo.serializers import MunicipalitySerializer
@@ -138,6 +137,11 @@ class MetricFileSerializer(Serializer):
         objs = Metric.objects.bulk_create(metrics_to_create, batch_size=2000)
 
         # Perform prediction for each metric
-        for metric in tqdm(objs, total=len(objs)):
-            metric.refresh_prediction()
+        for i, metric in enumerate(objs):
+            # An update per metric won't represent a significant delta in progress,
+            # so it will be updated each 10th metric prediction for performance reasons
+            if i % 10 == 0 or i == len(objs) - 1:
+                metric.refresh_prediction(refresh_progress=True)
+            else:
+                metric.refresh_prediction(refresh_progress=False)
         return objs
