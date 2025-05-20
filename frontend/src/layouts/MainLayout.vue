@@ -1,9 +1,8 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-
     <MainHeader />
 
-    <MainDrawer :width="drawerWidth.toString()"/>
+    <MainDrawer :width="drawerWidth.toString()" />
 
     <q-page-container>
       <router-view />
@@ -12,10 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import MainHeader from '../components/MainHeader.vue'
-import MainDrawer from '../components/MainDrawer.vue'
+import MainDrawer from '../components/MainDrawer.vue';
+import MainHeader from '../components/MainHeader.vue';
 
 import { ref } from 'vue';
 
-const drawerWidth = ref(Math.max(Math.floor(window.innerWidth / 3), 500))
+const drawerWidth = ref(Math.max(Math.floor(window.innerWidth / 3), 500));
 </script>
