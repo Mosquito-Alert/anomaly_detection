@@ -3,8 +3,7 @@
 
     <MainHeader />
 
-    <MainDrawer :width="drawerWidth.toString()">
-    </MainDrawer>
+    <MainDrawer :width="drawerWidth.toString()"/>
 
     <q-page-container>
       <router-view />
