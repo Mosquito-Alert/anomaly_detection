@@ -16,7 +16,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key")
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = os.environ.get("DEBUG", "False").lower() == 'true'
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8000', 'http://localhost:8000', 'http://localhost']
+ALLOWED_HOSTS = ['*']
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
 # Local time zone.
