@@ -24,7 +24,7 @@
         />
       </ol-tile-layer>
 
-      <ol-vector-tile-layer v-if="!dateFetched" ref="layerRef" :renderMode="'vector'">
+      <ol-vector-tile-layer ref="layerRef" :renderMode="'vector'">
         <ol-source-vector-tile
           ref="sourceRef"
           :url="anomalyLayer.url"
@@ -48,19 +48,21 @@
 </template>
 
 <script setup lang="ts">
-import { useUIStore } from '../stores/ui';
 import { Feature } from 'ol';
 import { fromLonLat } from 'ol/proj';
 import { Fill, Style } from 'ol/style';
 import { useQuasar } from 'quasar';
-import { api } from 'src/boot/axios';
 import { ANOMALY_COLORS } from 'src/constants/colors';
-import { computed, inject, onMounted, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 
-const ui = useUIStore();
+const props = defineProps({
+  date: {
+    type: String,
+    required: true,
+  },
+});
 
-const date = ref('2025-01-01');
-const dateFetched = ref(true);
+const $q = useQuasar();
 
 // * Base config
 const projection = ref('EPSG:3857');
@@ -85,28 +87,11 @@ const format = inject('ol-format');
 const mvtFormat = new format.MVT();
 const anomalyLayer = computed(() => {
   return {
-    show: date.value !== null,
-    url: `/api/metrics/tiles/{z}/{x}/{y}/?date=${date.value}`,
+    url: `/api/metrics/tiles/{z}/{x}/{y}/?date=${props.date}`,
     format: mvtFormat,
   };
 });
 
-// * Lifecycle
-onMounted(async () => {
-  try {
-    $q.loading.show({ message: 'Loading data...' });
-    const res = await api.get('/metrics/dates/last/');
-    date.value = res?.data?.date || date.value;
-    anomalyLayer.value.show = date.value !== null;
-  } catch (error) {
-    console.error('Error fetching latest date:', error);
-  } finally {
-    dateFetched.value = false;
-    $q.loading.hide();
-  }
-});
-
-const $q = useQuasar();
 const handleSourceTileLoadStart = () => {
   $q.loading.show({ message: 'Loading data...' });
 };
