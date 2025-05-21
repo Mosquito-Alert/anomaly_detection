@@ -1,6 +1,6 @@
 <template>
   <q-page>
-    <AnomalyMap v-if="dateFetched" :date="ui.date" />
+    <AnomalyMap v-if="dateFetched" :date="uiStore.date" />
     <q-img
       style="z-index: 1"
       class="absolute-bottom q-mb-sm"
@@ -21,7 +21,7 @@ import { onMounted, ref } from 'vue';
 
 const $q = useQuasar();
 
-const ui = useUIStore();
+const uiStore = useUIStore();
 
 const dateFetched = ref(false);
 
@@ -29,8 +29,8 @@ const dateFetched = ref(false);
 onMounted(async () => {
   try {
     $q.loading.show({ message: 'Loading data...' });
-    const res = await api.get('/metrics/dates/last/');
-    ui.setDate(res?.data?.date || ui.date);
+    const res = await api.get('metrics/dates/last/');
+    uiStore.setDate(res?.data?.date || uiStore.date);
     dateFetched.value = true;
   } catch (error) {
     console.error('Error fetching latest date:', error);

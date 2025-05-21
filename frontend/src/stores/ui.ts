@@ -1,13 +1,11 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
 
-export const useUIStore = defineStore('myStore', {
+export const useUIStore = defineStore('uiStore', {
   state: () => ({
-    showDrawer: false,
     date: '2025-01-01',
   }),
 
   getters: {
-    isDrawerOpen: (state) => state.showDrawer,
     formattedDate: (state) => {
       const date = new Date(state.date);
       return date.toLocaleDateString('es-ES', {
@@ -19,16 +17,6 @@ export const useUIStore = defineStore('myStore', {
   },
 
   actions: {
-    // * Drawer
-    toggleDrawer() {
-      this.showDrawer = !this.showDrawer;
-    },
-    openDrawer() {
-      this.showDrawer = true;
-    },
-    closeDrawer() {
-      this.showDrawer = false;
-    },
     // * Date
     setDate(newDate: string) {
       this.date = newDate;
