@@ -60,7 +60,26 @@ services:
       - "5555:5555"
     command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: mosquito-alert/anomaly-detection-local-frontend
+    container_name: anomaly-detection-local-frontend
+    hostname: frontend
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./frontend:/usr/app
+      - frontend_node_modules:/usr/app/node_modules
+    environment:
+      - VUE_APP_API_URL=http://api:8000
+      - VUE_APP_API_VERSION=v1
+    depends_on:
+      - api
 
 volumes:
   anomaly-detection-local-db_data:
   anomaly-detection-local-db_data_backups:
+  frontend_node_modules:
+

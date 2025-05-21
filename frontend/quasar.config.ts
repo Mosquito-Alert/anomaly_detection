@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig((ctx) => {
   const isDev = ctx.dev;
+  const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000';
+  const API_VERSION = process.env.VUE_APP_API_VERSION || 'v1';
+  const API_BASE_URL = `${API_URL}/api/${API_VERSION}/`;
+
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -34,6 +38,9 @@ export default defineConfig((ctx) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      env: {
+        API_BASE_URL,
+      },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node20',
@@ -103,7 +110,7 @@ export default defineConfig((ctx) => {
       ...(isDev && {
         proxy: {
           '/api': {
-            target: 'http://localhost:8000/api/v1/',
+            target: API_BASE_URL,
             changeOrigin: true,
             secure: false,
             rewrite: (path) => path.replace(/^\/api/, ''),
