@@ -2,7 +2,9 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Components from 'unplugin-vue-components/vite';
 
 export default defineConfig((ctx) => {
   const isDev = ctx.dev;
@@ -68,7 +70,34 @@ export default defineConfig((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf: any) {
+        viteConf.resolve = viteConf.resolve || {};
+
+        viteConf.resolve.alias = {
+          ...(viteConf.resolve.alias || {}),
+          components: path.resolve(__dirname, './src/components'),
+        };
+
+        viteConf.resolve.extensions = [
+          '.vue',
+          '.js',
+          '.ts',
+          '.jsx',
+          '.tsx',
+          '.json',
+          ...(viteConf.resolve.extensions || []),
+        ];
+
+        viteConf.plugins = [
+          ...(viteConf.plugins || []),
+          Components({
+            dirs: ['src/components'],
+            extensions: ['vue'],
+            deep: true,
+            directoryAsNamespace: false,
+          }),
+        ];
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [
