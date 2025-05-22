@@ -160,9 +160,22 @@ SPECTACULAR_SETTINGS = {
         'email': None,
         'url': None,
     },
-    'COMPONENT_SPLIT_REQUEST': True,  # So we can upload images through the UI.
+    'SERVERS': [
+        {
+            'url': 'http://localhost:8000/api/v1/',
+            'description': 'Development API v1'
+        },
+    ],
+    'SCHEMA_PATH_PREFIX': '/api/v[0-9]',
+    'SCHEMA_PATH_PREFIX_TRIM': True,
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
         'persistAuthorization': True,
-    }
+    },
+    'OAS_VERSION': '3.0.3',
+    'POSTPROCESSING_HOOKS': [],  # NOTE: needed for the openapi-generator and so we can upload files through the UI.
+    'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': False,  # See: https://github.com/tfranzel/drf-spectacular/issues/235
+    'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+
 }
