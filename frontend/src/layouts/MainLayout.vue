@@ -12,8 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import MainHeader from '../components/MainHeader.vue';
-import { useMapStore } from 'src/stores/map';
+import { useMapStore } from 'src/stores/mapStore';
 
 const mapStore = useMapStore();
 

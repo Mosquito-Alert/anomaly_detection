@@ -1,9 +1,11 @@
 import { FeatureLike } from 'ol/Feature';
 import { defineStore, acceptHMRUpdate } from 'pinia';
+import { api } from '../boot/axios';
 
 export const useMapStore = defineStore('mapStore', {
   state: () => ({
     selectedFeatures: [] as FeatureLike[],
+    selectedMetric: null,
   }),
 
   getters: {
@@ -30,6 +32,15 @@ export const useMapStore = defineStore('mapStore', {
     },
     clearSelectedFeatures() {
       this.selectedFeatures = [];
+    },
+    async fetchSelectedMetric(metricUuid: string) {
+      try {
+        const response = await api.get(`metrics/${metricUuid}/`);
+        if (response.status === 200 && response.data) {
+        }
+      } catch (error) {
+        console.error('Error fetching selected region:', error);
+      }
     },
   },
 });

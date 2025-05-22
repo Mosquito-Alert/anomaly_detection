@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { useUIStore } from 'src/stores/ui';
+import { useUIStore } from 'src/stores/uiStore';
 
 const uiStore = useUIStore();
 </script>

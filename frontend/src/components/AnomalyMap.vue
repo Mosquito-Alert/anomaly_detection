@@ -37,12 +37,12 @@
         <ol-style :overrideStyleFunction="styleFn"></ol-style>
       </ol-vector-tile-layer>
 
-      <ol-vector-layer>
-        <ol-source-vector :features="selectedFeatures" />
+      <ol-vector-layer :z-index="10">
+        <ol-source-vector :features="mapStore.selectedFeatures" />
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
       </ol-vector-layer>
 
-      <ol-tile-layer :z-index="10">
+      <ol-tile-layer :z-index="15">
         <ol-source-xyz
           :url="labelsLayer.url"
           :preload="labelsLayer.preload"
@@ -58,7 +58,6 @@
 
 <script setup lang="ts">
 import { Feature, MapBrowserEvent } from 'ol';
-import { FeatureLike } from 'ol/Feature';
 import { fromLonLat } from 'ol/proj';
 import { Fill, Stroke, Style } from 'ol/style';
 import type MapRef from 'ol/Map';
@@ -67,7 +66,7 @@ import { getCssVar, useQuasar } from 'quasar';
 import { ANOMALY_COLORS } from 'src/constants/colors';
 import { computed, inject, ref, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
-import { useMapStore } from 'src/stores/map';
+import { useMapStore } from 'src/stores/mapStore';
 
 const props = defineProps({
   date: {
@@ -118,6 +117,7 @@ const handleSourceTileLoadStart = () => {
   $q.loading.show({ message: 'Loading data...' });
 };
 const handleSourceTileLoadEnd = (event: any) => {
+  // DELETE:
   console.log(event);
   $q.loading.hide();
 };
@@ -125,7 +125,6 @@ const handleSourceTileLoadEnd = (event: any) => {
 /**
  * Select and hover features
  */
-const selectedFeatures = ref<FeatureLike[]>([]);
 
 function layerFilter(layerCandidate: Layer) {
   return layerCandidate.getClassName().includes('feature-layer');

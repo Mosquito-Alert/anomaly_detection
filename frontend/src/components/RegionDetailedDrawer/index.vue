@@ -1,7 +1,12 @@
 <template>
-  <q-drawer show-if-above side="right" :width="width" class="bg-white q-pb-md overflow-hidden">
+  <q-drawer
+    show-if-above
+    side="right"
+    :width="width"
+    class="bg-white q-pb-md q-px-md overflow-hidden"
+  >
     <q-separator class="q-mb-md" />
-    <div class="q-mini-drawer-hide">
+    <div class="q-drawer-hide">
       <q-btn
         dense
         round
@@ -14,13 +19,20 @@
       <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
     </div>
 
-    <h2 class="text-h2">{{ mapStore.getSelectedRegionName }}</h2>
+    <!-- * CONTENT -->
+    <h2 class="text-h2 q-py-lg q-ma-none">{{ mapStore.getSelectedRegionName }}</h2>
+    <q-separator class="q-mb-md" />
+    <RegionSummary style="background-color: rgb(255, 255, 0, 0.5)" />
+    <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5)" />
+    <RegionAnomaliesChart style="background-color: rgb(0, 255, 0, 0.5)" />
+    <RegionAnomaliesTable style="background-color: rgb(0, 0, 255, 0.5)" />
+
     <q-scroll-area class="full-height q-pa-md"> </q-scroll-area>
   </q-drawer>
 </template>
 
 <script setup lang="ts">
-import { useMapStore } from 'src/stores/map';
+import { useMapStore } from 'src/stores/mapStore';
 
 const props = defineProps({
   width: String,

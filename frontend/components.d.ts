@@ -10,7 +10,13 @@ declare module 'vue' {
   export interface GlobalComponents {
     AnomalyMap: typeof import('./src/components/AnomalyMap.vue')['default']
     MainHeader: typeof import('./src/components/MainHeader.vue')['default']
+    RegionAnomalies: typeof import('./src/components/RegionDetailedDrawer/RegionAnomalies.vue')['default']
+    RegionAnomaliesChart: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesChart.vue')['default']
+    RegionAnomaliesHistory: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesHistory.vue')['default']
+    RegionAnomaliesTable: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesTable.vue')['default']
     RegionDetailedDrawer: typeof import('./src/components/RegionDetailedDrawer/index.vue')['default']
+    RegionSeasonality: typeof import('./src/components/RegionDetailedDrawer/RegionSeasonality.vue')['default']
+    RegionSummary: typeof import('./src/components/RegionDetailedDrawer/RegionSummary.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

@@ -14,9 +14,7 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
-import { api } from 'src/boot/axios';
-import AnomalyMap from 'src/components/AnomalyMap.vue';
-import { useUIStore } from 'src/stores/ui';
+import { useUIStore } from 'src/stores/uiStore';
 import { onMounted, ref } from 'vue';
 
 const $q = useQuasar();
@@ -27,15 +25,9 @@ const dateFetched = ref(false);
 
 // * Lifecycle
 onMounted(async () => {
-  try {
-    $q.loading.show({ message: 'Loading data...' });
-    const res = await api.get('metrics/dates/last/');
-    uiStore.setDate(res?.data?.date || uiStore.date);
-    dateFetched.value = true;
-  } catch (error) {
-    console.error('Error fetching latest date:', error);
-  } finally {
-    $q.loading.hide();
-  }
+  $q.loading.show({ message: 'Loading data...' });
+  await uiStore.fetchLastDate();
+  dateFetched.value = true;
+  $q.loading.hide();
 });
 </script>
