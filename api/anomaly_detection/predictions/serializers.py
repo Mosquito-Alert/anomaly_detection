@@ -18,18 +18,14 @@ class MetricSerializer(ModelSerializer):
     Serializer for the Metrics.
     """
     region_code = SerializerMethodField()
-    trend = SerializerMethodField()
 
     def get_region_code(self, obj=None) -> str:
         return obj.region.code
 
-    def get_trend(self, obj=None) -> str:
-        return obj.prediction.trend
-
     class Meta:
         model = Metric
         fields = ['id', 'date', 'value', 'predicted_value', 'lower_value', 'upper_value',
-                  'trend', 'anomaly_degree', 'region_code']
+                  'anomaly_degree', 'region_code']
         read_only_fields = ['created_at', 'updated_at', 'anomaly_degree']
 
 
@@ -41,7 +37,7 @@ class MetricDetailSerializer(MetricSerializer):
 
     class Meta(MetricSerializer.Meta):
         fields = ['id', 'date', 'value', 'predicted_value', 'lower_value', 'upper_value',
-                  'trend', 'anomaly_degree', 'region']
+                  'anomaly_degree', 'region']
 
 
 class MetricSeasonalitySerializer(ModelSerializer):

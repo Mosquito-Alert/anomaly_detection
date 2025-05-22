@@ -183,7 +183,7 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
             if region_code:
                 queryset = queryset.filter(region__code=region_code)
 
-        return queryset
+        return queryset.all()
 
     def get_serializer_class(self):
         """

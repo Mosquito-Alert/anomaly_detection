@@ -147,7 +147,8 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'anomaly_detection.utils.pagination.StandardPagination',
 }
 
 # Spectacular settings
@@ -177,5 +178,4 @@ SPECTACULAR_SETTINGS = {
     'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': False,  # See: https://github.com/tfranzel/drf-spectacular/issues/235
     'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
     'COMPONENT_SPLIT_REQUEST': True,
-
 }

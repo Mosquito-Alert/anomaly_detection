@@ -16,7 +16,7 @@ class RegionSelectedManager(Manager):
         These are useful for performance reasons (one query and not retrieving the geometry field
         by default).
         """
-        return super().get_queryset().select_related('region').defer('region__geometry')
+        return super().get_queryset().select_related('region').defer('region__geometry', 'predictor')
 
     def with_geometry(self):
         """
@@ -24,7 +24,8 @@ class RegionSelectedManager(Manager):
         This is useful for when you need to access the geometry data.
         """
         return super().get_queryset().select_related('region').prefetch_related(
-            Prefetch('region', queryset=Municipality.objects.with_geometry())  # .filter(pk=OuterRef('region'))
+            Prefetch('region', queryset=Municipality.objects.with_geometry().defer(
+                'predictor'))  # .filter(pk=OuterRef('region'))
         )
 
 
