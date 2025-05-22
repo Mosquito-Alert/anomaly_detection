@@ -6,7 +6,7 @@ from .models import Metric
 class MetricMunicipalityVectorLayer(VectorLayer):
     queryset = Metric.objects.with_geometry()
     id = "metrics"
-    tile_fields = ('anomaly_degree', 'region__code', 'region__name',)
+    tile_fields = ('anomaly_degree', 'id', 'region__name',)
     min_zoom = 0
     geom_field = "region__geometry"
 
