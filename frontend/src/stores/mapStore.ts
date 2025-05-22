@@ -1,6 +1,7 @@
 import { FeatureLike } from 'ol/Feature';
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { api } from '../boot/axios';
+import { metricsApi } from '../services/apiService';
+import { MetricsApiRetrieveRequest } from 'anomaly-detection';
 
 export const useMapStore = defineStore('mapStore', {
   state: () => ({
@@ -35,7 +36,7 @@ export const useMapStore = defineStore('mapStore', {
     },
     async fetchSelectedMetric(metricUuid: string) {
       try {
-        const response = await api.get(`metrics/${metricUuid}/`);
+        const response = await metricsApi.retrieve({ id: metricUuid });
         if (response.status === 200 && response.data) {
         }
       } catch (error) {

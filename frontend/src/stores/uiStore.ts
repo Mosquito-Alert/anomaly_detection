@@ -1,5 +1,5 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { api } from '../boot/axios';
+import { metricsApi } from '../services/apiService';
 
 export const useUIStore = defineStore('uiStore', {
   state: () => ({
@@ -21,7 +21,7 @@ export const useUIStore = defineStore('uiStore', {
     // * Date
     async fetchLastDate() {
       try {
-        const response = await api.get('metrics/dates/last/');
+        const response = await metricsApi.lastDateRetrieve();
         if (response.status === 200 && response.data) {
           this.setDate(response.data.date);
         }
