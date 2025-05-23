@@ -3,13 +3,14 @@
     <div class="row q-pa-xs">
       <div class="col">
         <div class="row">
-          <span class="text-weight-light">Vector Risk Index</span>
+          <span class="text-weight-light">Bites Index</span>
           <q-space />
-          <!-- <q-badge :label="status" :color="statusColorName" v-if="!loadingFeature"></q-badge> -->
+          <q-badge :label="status" :color="statusColorName" v-if="!loading"></q-badge>
         </div>
+        <!-- TODO: (For the 3 values): change font size relative to the width so the info is well framed  -->
         <div class="row justify-center">
-          <!-- <span class="text-h1" v-if="!loadingFeature">{{ VRI }}%</span> -->
-          <!-- <q-skeleton class="text-h1 full-width" v-if="loadingFeature" /> -->
+          <span class="text-h1" v-if="!props.loading">{{ metric.value }}%</span>
+          <q-skeleton class="text-h1 full-width" v-if="props.loading" />
         </div>
       </div>
       <q-separator vertical class="q-mx-md" />
@@ -19,17 +20,68 @@
         </div>
         <div class="row flex items-center justify-center">
           <span class="text-weight-light self-end">max.</span>
-          <!-- <span class="text-h3" v-if="!loadingFeature">{{ upperBound }}%</span> -->
-          <!-- <q-skeleton class="text-h3 col-4" v-if="loadingFeature" /> -->
+          <span class="text-h3" v-if="!loading">{{ metric.upper_value }}%</span>
+          <q-skeleton class="text-h3 col-4" v-if="loading" />
         </div>
         <div class="row flex items-center justify-center">
           <span class="text-weight-light self-end">min.</span>
-          <!-- <span class="text-h3" v-if="!loadingFeature">{{ lowerBound }}%</span> -->
-          <!-- <q-skeleton class="text-h3 col-4" v-if="loadingFeature" /> -->
+          <span class="text-h3" v-if="!loading">{{ metric.lower_value }}%</span>
+          <q-skeleton class="text-h3 col-4" v-if="loading" />
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { computed } from 'vue';
+import { MetricDetail } from 'anomaly-detection';
+
+const props = defineProps({
+  metric: {
+    type: Object as () => MetricDetail,
+    required: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const status = computed(() => {
+  if (Object.keys(props.metric).length === 0 || props.metric.anomaly_degree === null) {
+    return;
+  }
+
+  let resultText;
+
+  if (props.metric.anomaly_degree > 0) {
+    resultText = 'High';
+  } else if (props.metric.anomaly_degree < 0) {
+    resultText = 'Low';
+  } else if (props.metric.anomaly_degree === 0) {
+    resultText = 'Usual';
+  } else {
+    resultText = 'N/A';
+  }
+
+  return resultText;
+});
+const statusColorName = computed(() => {
+  let color;
+  switch (status.value || '') {
+    case 'Usual':
+      color = 'anomaly-usual'; // From app.scss
+      break;
+    case 'Low':
+      color = 'anomaly-lower'; // From app.scss
+      break;
+    case 'High':
+      color = 'anomaly-higher'; // From app.scss
+      break;
+    default:
+      color = 'gray'; // Default color if no match
+  }
+  return color;
+});
+</script>

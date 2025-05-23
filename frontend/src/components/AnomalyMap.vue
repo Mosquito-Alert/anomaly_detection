@@ -171,6 +171,7 @@ watchEffect(() => {
  * Styles
  */
 const styleFn = (feature: Feature) => {
+  // TODO: Add a gradient to the fill color based on the anomaly degree
   let fillColor;
   const anomaly_degree = feature.get('anomaly_degree');
   if (anomaly_degree !== 0) {

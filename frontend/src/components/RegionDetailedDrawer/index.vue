@@ -24,7 +24,10 @@
       {{ title }}
     </h2>
     <q-separator class="q-mb-md" />
-    <RegionSummary style="background-color: rgb(255, 255, 0, 0.5)" />
+    <RegionSummary
+      :metric="mapStore.getFormattedRegionMetric"
+      :loading="mapStore.fetchingRegionMetric"
+    />
     <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5)" />
     <RegionAnomaliesChart style="background-color: rgb(0, 255, 0, 0.5)" />
     <RegionAnomaliesTable style="background-color: rgb(0, 0, 255, 0.5)" />
@@ -45,11 +48,11 @@ const mapStore = useMapStore();
 
 const title = computed(() => {
   const defaultTitle = 'Region Unknown';
-  if (!mapStore.selectedRegionMetric || !mapStore.selectedRegionMetric.region) {
+  const selectedRegionMetric = mapStore.selectedRegionMetric;
+  if (!selectedRegionMetric) {
     return defaultTitle;
   }
-  const region = mapStore.selectedRegionMetric.region as any;
-  return `${region.name}, ${region.province}`;
+  return `${selectedRegionMetric.region.name}, ${selectedRegionMetric.region.province}`;
 });
 
 const width = props.width ? parseInt(props.width) : 500;
