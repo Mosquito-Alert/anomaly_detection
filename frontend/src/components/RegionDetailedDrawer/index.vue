@@ -20,7 +20,9 @@
     </div>
 
     <!-- * CONTENT -->
-    <h2 class="text-h2 q-py-lg q-ma-none">{{ mapStore.getSelectedRegionName }}</h2>
+    <h2 class="text-h2 q-py-lg q-ma-none">
+      {{ title }}
+    </h2>
     <q-separator class="q-mb-md" />
     <RegionSummary style="background-color: rgb(255, 255, 0, 0.5)" />
     <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5)" />
@@ -33,12 +35,22 @@
 
 <script setup lang="ts">
 import { useMapStore } from 'src/stores/mapStore';
+import { computed } from 'vue';
 
 const props = defineProps({
   width: String,
 });
 
 const mapStore = useMapStore();
+
+const title = computed(() => {
+  const defaultTitle = 'Region Unknown';
+  if (!mapStore.selectedRegionMetric || !mapStore.selectedRegionMetric.region) {
+    return defaultTitle;
+  }
+  const region = mapStore.selectedRegionMetric.region as any;
+  return `${region.name}, ${region.province}`;
+});
 
 const width = props.width ? parseInt(props.width) : 500;
 </script>

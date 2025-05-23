@@ -38,7 +38,7 @@
       </ol-vector-tile-layer>
 
       <ol-vector-layer :z-index="10">
-        <ol-source-vector :features="mapStore.selectedFeatures" />
+        <ol-source-vector :features="selectedFeatures" />
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
       </ol-vector-layer>
 
@@ -67,6 +67,8 @@ import { ANOMALY_COLORS } from 'src/constants/colors';
 import { computed, inject, ref, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
 import { useMapStore } from 'src/stores/mapStore';
+import { FeatureLike } from 'ol/Feature';
+import { Geometry } from 'ol/geom';
 
 const props = defineProps({
   date: {
@@ -75,6 +77,8 @@ const props = defineProps({
   },
 });
 const mapStore = useMapStore();
+
+const selectedFeatures = ref([] as FeatureLike[]);
 
 const mapRef = ref<{ map: MapRef } | null>(null);
 const viewRef = ref();
@@ -105,7 +109,7 @@ const labelsLayer = ref({
   opaque: false,
 });
 const format = inject('ol-format');
-const mvtFormat = new format.MVT({ idProperty: 'region__code' });
+const mvtFormat = new format.MVT({ idProperty: 'id' });
 const anomalyLayer = computed(() => {
   return {
     url: `/api/metrics/tiles/{z}/{x}/{y}/?date=${props.date}`,
@@ -116,9 +120,7 @@ const anomalyLayer = computed(() => {
 const handleSourceTileLoadStart = () => {
   $q.loading.show({ message: 'Loading data...' });
 };
-const handleSourceTileLoadEnd = (event: any) => {
-  // DELETE:
-  console.log(event);
+const handleSourceTileLoadEnd = () => {
   $q.loading.hide();
 };
 
@@ -126,11 +128,11 @@ const handleSourceTileLoadEnd = (event: any) => {
  * Select and hover features
  */
 
-function layerFilter(layerCandidate: Layer) {
+const layerFilter = (layerCandidate: Layer) => {
   return layerCandidate.getClassName().includes('feature-layer');
-}
+};
 
-function selectFeature(event: MapBrowserEvent<PointerEvent>) {
+const selectFeature = async (event: MapBrowserEvent<PointerEvent>) => {
   const map = mapRef.value?.map;
   if (!map) {
     return;
@@ -146,17 +148,17 @@ function selectFeature(event: MapBrowserEvent<PointerEvent>) {
   }
   // So only one feature is selected
   const firstFeature = features[0] as Feature;
-  mapStore.setSelectedFeatures([firstFeature]);
+  selectedFeatures.value = [firstFeature];
+  await mapStore.fetchAndSetSelectedMetric(firstFeature.getId() as string);
 
-  console.log(
-    `Selected feature (${mapStore.getSelectedRegion.getId()}) properties:`,
-    firstFeature.getProperties(),
-  );
-}
+  // DELETE:
+  console.log(`Selected metric:`, mapStore.selectedRegionMetric);
+};
 // Zoom to selectedFeature
 watchEffect(() => {
-  if (mapStore.getSelectedRegion) {
-    const geometry = mapStore.getSelectedRegion.getGeometry() as any;
+  if (mapStore.isRegionSelected) {
+    const feature = selectedFeatures.value[0] as FeatureLike;
+    const geometry = feature.getGeometry() as Geometry;
     viewRef.value.view.fit(geometry.getExtent(), {
       padding: [250, 250, 250, 250], //Padding around the feature
       duration: 600, // duration of the zoom animation in milliseconds
@@ -168,7 +170,7 @@ watchEffect(() => {
 /**
  * Styles
  */
-function styleFn(feature: Feature) {
+const styleFn = (feature: Feature) => {
   let fillColor;
   const anomaly_degree = feature.get('anomaly_degree');
   if (anomaly_degree !== 0) {
@@ -182,13 +184,13 @@ function styleFn(feature: Feature) {
       color: fillColor,
     }),
   });
-}
+};
 
-function selectedStyleFn(feature: any) {
+const selectedStyleFn = (feature: any) => {
   const style = hoverStyleFn(feature);
   (style.getStroke() as Stroke).setWidth(4);
   return style;
-}
+};
 
 const hoverStyleFn = (feature: any) => {
   const style = styleFn(feature);

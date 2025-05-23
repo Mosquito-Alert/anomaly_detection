@@ -1,47 +1,30 @@
 import { FeatureLike } from 'ol/Feature';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { metricsApi } from '../services/apiService';
-import { MetricsApiRetrieveRequest } from 'anomaly-detection';
+import { MetricDetail } from 'anomaly-detection';
 
 export const useMapStore = defineStore('mapStore', {
   state: () => ({
-    selectedFeatures: [] as FeatureLike[],
-    selectedMetric: null,
+    selectedRegionMetric: {} as MetricDetail,
   }),
 
   getters: {
-    isRegionSelected: (state) => state.selectedFeatures.length > 0,
-    getSelectedRegion: (state) => state.selectedFeatures[0] as FeatureLike,
-    getSelectedRegionId: (state) => {
-      return state.selectedFeatures[0] ? state.selectedFeatures[0].getId() : null;
-    },
-    getSelectedRegionName: (state) => {
-      return state.selectedFeatures[0]
-        ? state.selectedFeatures[0].getProperties().region__name
-        : null;
-    },
-    getSelectedRegionAnomalyDegree: (state) => {
-      return state.selectedFeatures[0]
-        ? state.selectedFeatures[0].getProperties().anomaly_degree
-        : null;
-    },
+    isRegionSelected: (state) => Object.keys(state.selectedRegionMetric).length > 0,
   },
 
   actions: {
-    setSelectedFeatures(features: FeatureLike[]) {
-      this.selectedFeatures = features;
-    },
-    clearSelectedFeatures() {
-      this.selectedFeatures = [];
-    },
-    async fetchSelectedMetric(metricUuid: string) {
+    async fetchAndSetSelectedMetric(metricUuid: string) {
       try {
         const response = await metricsApi.retrieve({ id: metricUuid });
         if (response.status === 200 && response.data) {
+          this.selectedRegionMetric = response.data;
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
       }
+    },
+    clearSelectedFeatures() {
+      this.selectedRegionMetric = {} as MetricDetail;
     },
   },
 });
