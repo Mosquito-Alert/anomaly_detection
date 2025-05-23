@@ -9,8 +9,8 @@
         </div>
         <!-- TODO: (For the 3 values): change font size relative to the width so the info is well framed  -->
         <div class="row justify-center">
-          <span class="text-h1" v-if="!props.loading">{{ metric.value }}%</span>
-          <q-skeleton class="text-h1 full-width" v-if="props.loading" />
+          <span class="text-h1" v-if="!loading">{{ metric.value }}%</span>
+          <q-skeleton class="text-h1 full-width" v-if="loading" />
         </div>
       </div>
       <q-separator vertical class="q-mx-md" />
@@ -36,31 +36,31 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { MetricDetail } from 'anomaly-detection';
+import { useMapStore } from 'src/stores/mapStore';
 
-const props = defineProps({
-  metric: {
-    type: Object as () => MetricDetail,
-    required: true,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-});
+const mapStore = useMapStore();
+
+const metric = computed<MetricDetail>(() => mapStore.getFormattedRegionMetric as MetricDetail);
+const loading = computed(() => mapStore.fetchingRegionMetric);
 
 const status = computed(() => {
-  if (Object.keys(props.metric).length === 0 || props.metric.anomaly_degree === null) {
+  if (
+    Object.keys(metric).length === 0 ||
+    metric.value.anomaly_degree === undefined ||
+    metric.value.anomaly_degree === null
+  ) {
     return;
   }
 
   let resultText;
 
-  if (props.metric.anomaly_degree > 0) {
+  if (metric.value.anomaly_degree > 0) {
     resultText = 'High';
-  } else if (props.metric.anomaly_degree < 0) {
+  } else if (metric.value.anomaly_degree < 0) {
     resultText = 'Low';
-  } else if (props.metric.anomaly_degree === 0) {
+  } else if (metric.value.anomaly_degree === 0) {
     resultText = 'Usual';
+    console.log('ASDASDASD');
   } else {
     resultText = 'N/A';
   }

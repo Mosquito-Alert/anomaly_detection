@@ -149,10 +149,7 @@ const selectFeature = async (event: MapBrowserEvent<PointerEvent>) => {
   // So only one feature is selected
   const firstFeature = features[0] as Feature;
   selectedFeatures.value = [firstFeature];
-  await mapStore.fetchAndSetSelectedMetric(firstFeature.getId() as string);
-
-  // DELETE:
-  console.log(`Selected metric:`, mapStore.selectedRegionMetric);
+  mapStore.selectedRegionMetricId = firstFeature.getId() as string;
 };
 // Zoom to selectedFeature
 watchEffect(() => {

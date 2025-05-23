@@ -13,6 +13,7 @@ declare module 'vue' {
     RegionAnomalies: typeof import('./src/components/RegionDetailedDrawer/RegionAnomalies.vue')['default']
     RegionAnomaliesChart: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesChart.vue')['default']
     RegionAnomaliesHistory: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesHistory.vue')['default']
+    RegionAnomaliesHistoryTable: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesHistoryTable.vue')['default']
     RegionAnomaliesTable: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesTable.vue')['default']
     RegionDetailedDrawer: typeof import('./src/components/RegionDetailedDrawer/index.vue')['default']
     RegionSeasonality: typeof import('./src/components/RegionDetailedDrawer/RegionSeasonality.vue')['default']
