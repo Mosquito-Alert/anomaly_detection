@@ -16,5 +16,5 @@ import { useMapStore } from 'src/stores/mapStore';
 
 const mapStore = useMapStore();
 
-const drawerWidth = ref(Math.max(Math.floor(window.innerWidth / 3), 500));
+const drawerWidth = ref(Math.max(Math.floor(window.innerWidth / 2.75), 500));
 </script>

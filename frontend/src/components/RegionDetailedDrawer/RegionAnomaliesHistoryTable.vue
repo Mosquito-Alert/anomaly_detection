@@ -7,6 +7,8 @@
       :columns="columns"
       :loading="loading"
       v-model:pagination="pagination"
+      :rows-per-page-options="[5, 10, 25, 50]"
+      @request="onRequest"
     >
       <template v-slot:loading>
         <q-inner-loading showing color="primary" />
@@ -24,31 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Metric, PaginatedMetricList } from 'anomaly-detection';
 import { useMapStore } from 'src/stores/mapStore';
 import { date, QTableProps } from 'quasar';
 import { anomalyClassificationStyle, classifyAnomaly } from 'src/utils/anomalyClassification';
 import { historyPageSize } from 'src/constants/config';
-
-const mapStore = useMapStore();
-
-const history = computed<PaginatedMetricList>(
-  () => mapStore.selectedRegionHistory as PaginatedMetricList,
-);
-const loading = computed(() => mapStore.fetchingRegionHistory);
-const data = computed<Array<Metric>>(() => {
-  if (!history.value || !history.value.results) {
-    return [];
-  }
-  return history.value.results;
-});
-// TODO: Pagination
-const pagination = ref({
-  rowsPerPage: historyPageSize,
-  sortBy: 'date',
-  descending: true,
-});
 
 const columns: QTableProps['columns'] = [
   {
@@ -57,8 +40,6 @@ const columns: QTableProps['columns'] = [
     required: true,
     label: 'Date',
     align: 'left',
-    sortable: true,
-    sortOrder: 'da',
     format: (val: string, row: any): string => date.formatDate(new Date(val), 'YYYY-MM-DD'),
   },
   {
@@ -94,4 +75,49 @@ const columns: QTableProps['columns'] = [
     align: 'center',
   },
 ];
+
+const mapStore = useMapStore();
+
+const loading = computed(() => mapStore.fetchingRegionHistory);
+const history = computed<PaginatedMetricList>(
+  () => mapStore.selectedRegionHistory as PaginatedMetricList,
+);
+const data = computed<Array<Metric>>(() => {
+  if (!history.value || !history.value.results) {
+    return [];
+  }
+  return history.value.results;
+});
+
+const pagination = ref({
+  rowsPerPage: historyPageSize,
+  rowsNumber: history.value?.count || 0,
+  page: 1,
+  sortBy: 'date',
+  descending: true,
+});
+
+watch(
+  () => history.value,
+  async (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+      pagination.value.rowsNumber = newValue?.count || 0;
+    }
+  },
+  { immediate: true },
+);
+
+const onRequest = async (props: any) => {
+  const { page, rowsPerPage } = props.pagination;
+
+  const returnedData = await mapStore.fetchAndSetSelectedMetricHistory({
+    page: page,
+    pageSize: rowsPerPage,
+  });
+
+  pagination.value.page = page;
+  pagination.value.rowsPerPage = rowsPerPage;
+
+  return returnedData;
+};
 </script>
