@@ -37,6 +37,11 @@
 import { computed } from 'vue';
 import { MetricDetail } from 'anomaly-detection';
 import { useMapStore } from 'src/stores/mapStore';
+import {
+  AnomalyClassificationEnum,
+  anomalyClassificationStyle,
+  classifyAnomaly,
+} from 'src/utils/anomalyClassification';
 
 const mapStore = useMapStore();
 
@@ -52,36 +57,9 @@ const status = computed(() => {
     return;
   }
 
-  let resultText;
-
-  if (metric.value.anomaly_degree > 0) {
-    resultText = 'High';
-  } else if (metric.value.anomaly_degree < 0) {
-    resultText = 'Low';
-  } else if (metric.value.anomaly_degree === 0) {
-    resultText = 'Usual';
-    console.log('ASDASDASD');
-  } else {
-    resultText = 'N/A';
-  }
-
-  return resultText;
+  return classifyAnomaly(metric.value.anomaly_degree) as AnomalyClassificationEnum;
 });
 const statusColorName = computed(() => {
-  let color;
-  switch (status.value || '') {
-    case 'Usual':
-      color = 'anomaly-usual'; // From app.scss
-      break;
-    case 'Low':
-      color = 'anomaly-lower'; // From app.scss
-      break;
-    case 'High':
-      color = 'anomaly-higher'; // From app.scss
-      break;
-    default:
-      color = 'gray'; // Default color if no match
-  }
-  return color;
+  return anomalyClassificationStyle(status.value || AnomalyClassificationEnum.N_A);
 });
 </script>

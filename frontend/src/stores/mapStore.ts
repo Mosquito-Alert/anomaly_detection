@@ -1,6 +1,7 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { metricsApi } from '../services/apiService';
 import { MetricDetail, PaginatedMetricList } from 'anomaly-detection';
+import { historyPageSize } from '../constants/config';
 
 export const useMapStore = defineStore('mapStore', {
   state: () => ({
@@ -8,6 +9,7 @@ export const useMapStore = defineStore('mapStore', {
     selectedRegionMetric: null as MetricDetail | null,
     selectedRegionHistory: null as PaginatedMetricList | null,
     fetchingRegionMetric: true,
+    fetchingRegionHistory: true,
   }),
 
   getters: {
@@ -32,7 +34,7 @@ export const useMapStore = defineStore('mapStore', {
     async fetchAndSetSelectedMetricHistory({
       daysSince = 30,
       page = 1,
-      pageSize = 10,
+      pageSize = historyPageSize,
     }: {
       daysSince?: number;
       page?: number;
@@ -44,7 +46,7 @@ export const useMapStore = defineStore('mapStore', {
       dateFrom.setDate(dateFrom.getDate() - daysSince);
       const dateStringFrom = dateFrom.toISOString().split('T')[0] || '';
       try {
-        //   this.fetchingRegionMetric = true; // Loading history
+        this.fetchingRegionHistory = true;
         const response = await metricsApi.list({
           regionCode: this.selectedRegionMetric?.region?.code,
           dateFrom: dateStringFrom,
@@ -54,7 +56,7 @@ export const useMapStore = defineStore('mapStore', {
         });
         if (response.status === 200 && response.data) {
           this.selectedRegionHistory = response.data;
-          // this.fetchingRegionMetric = false;
+          this.fetchingRegionHistory = false;
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);

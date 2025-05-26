@@ -37,7 +37,7 @@
         <ol-style :overrideStyleFunction="styleFn"></ol-style>
       </ol-vector-tile-layer>
 
-      <ol-vector-layer :z-index="10">
+      <ol-vector-layer :z-index="10" render-mode="vector">
         <ol-source-vector :features="selectedFeatures" />
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
       </ol-vector-layer>

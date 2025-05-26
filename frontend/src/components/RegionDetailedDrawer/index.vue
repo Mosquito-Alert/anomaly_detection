@@ -1,10 +1,5 @@
 <template>
-  <q-drawer
-    show-if-above
-    side="right"
-    :width="width"
-    class="bg-white q-pb-md q-px-md overflow-hidden"
-  >
+  <q-drawer show-if-above side="right" :width="width" class="bg-white q-pb-md overflow-hidden">
     <q-separator class="q-mb-md" />
     <div class="q-drawer-hide">
       <q-btn
@@ -20,20 +15,21 @@
     </div>
 
     <!-- * CONTENT -->
-    <h2 class="text-h2 q-py-lg q-ma-none">
+    <h2 class="text-h2 q-py-lg q-px-md q-ma-none">
       {{ title }}
     </h2>
     <q-separator class="q-mb-md" />
-    <RegionSummary />
-    <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5)" />
-    <RegionAnomaliesChart style="background-color: rgb(0, 255, 0, 0.5)" />
-    <RegionAnomaliesHistoryTable />
-
-    <q-scroll-area class="full-height q-pa-md"> </q-scroll-area>
+    <q-scroll-area class="full-height q-pa-md">
+      <RegionSummary />
+      <RegionAnomaliesHistoryTable />
+      <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5); height: 500px" />
+      <RegionAnomaliesChart style="background-color: rgb(0, 255, 0, 0.5)" />
+    </q-scroll-area>
   </q-drawer>
 </template>
 
 <script setup lang="ts">
+import { historyPageSize } from 'src/constants/config';
 import { useMapStore } from 'src/stores/mapStore';
 import { computed, onMounted, watch } from 'vue';
 
@@ -46,9 +42,7 @@ const mapStore = useMapStore();
 const updateDataHook = async () => {
   if (!mapStore.selectedRegionMetricId) return;
   await mapStore.fetchAndSetSelectedMetric(mapStore.selectedRegionMetricId!);
-  await mapStore.fetchAndSetSelectedMetricHistory({ page: 1 });
-  console.log(`Selected metric:`, mapStore.selectedRegionMetric);
-  console.log(`Selected history:`, mapStore.selectedRegionHistory);
+  await mapStore.fetchAndSetSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
 };
 
 watch(
