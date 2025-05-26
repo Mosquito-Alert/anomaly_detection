@@ -1,29 +1,36 @@
 <template>
-  <q-drawer show-if-above side="right" :width="width" class="bg-white q-pb-md overflow-hidden">
-    <q-separator class="q-mb-md" />
-    <div class="q-drawer-hide">
-      <q-btn
-        dense
-        round
-        unelevated
-        color="accent"
-        icon="chevron_right"
-        @click="mapStore.clearSelectedFeatures"
-      />
-      Ocultar
-      <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
-    </div>
+  <q-drawer
+    show-if-above
+    side="right"
+    :width="width"
+    class="bg-white q-pb-md overflow-hidden column"
+  >
+    <div class="drawer-header">
+      <q-separator class="q-mb-md" />
+      <div class="q-drawer-hide">
+        <q-btn
+          dense
+          round
+          unelevated
+          color="accent"
+          icon="chevron_right"
+          @click="mapStore.clearSelectedFeatures"
+        />
+        Ocultar
+        <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
+      </div>
 
+      <h2 class="text-h2 q-py-lg q-px-md q-ma-none">
+        {{ title }}
+      </h2>
+      <q-separator class="q-mb-md" />
+    </div>
     <!-- * CONTENT -->
-    <h2 class="text-h2 q-py-lg q-px-md q-ma-none">
-      {{ title }}
-    </h2>
-    <q-separator class="q-mb-md" />
-    <q-scroll-area class="full-height q-pa-md">
+    <q-scroll-area class="drawer-content full-height q-pa-md col overflow-auto">
       <RegionSummary />
-      <RegionAnomaliesHistoryTable />
       <RegionSeasonality style="background-color: rgb(255, 0, 0, 0.5); height: 500px" />
       <RegionAnomaliesChart style="background-color: rgb(0, 255, 0, 0.5)" />
+      <RegionAnomaliesHistoryTable />
     </q-scroll-area>
   </q-drawer>
 </template>
