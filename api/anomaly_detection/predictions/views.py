@@ -1,9 +1,9 @@
 from datetime import datetime
-
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (OpenApiParameter, OpenApiResponse, extend_schema,
                                    extend_schema_view)
-from rest_framework import status
+from rest_framework import filters, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -46,7 +46,13 @@ from anomaly_detection.predictions.vector_layers import \
                 required=False,
                 default='ESP.1.1.1.1_1'
             ),
-
+            OpenApiParameter(
+                name='ordering',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                enum=['date', '-date'],
+                description='Order by `date` (asc) or `-date` (desc)',
+            ),
         ]
     ),
     get_tiles=extend_schema(
@@ -70,6 +76,12 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
     queryset = Metric.objects
     serializer_class = MetricSerializer
     layer_classes = [MetricMunicipalityVectorLayer]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter
+    ]
+    ordering_fields = ['date']
+    ordering = ['-date']
 
     id = "features"
     tile_fields = ('anomaly_degree', )
