@@ -239,12 +239,26 @@ class Metric(models.Model):
 
     anomaly_degree = models.GeneratedField(
         expression=Case(
-            When(value__gt=F('upper_value'),
-                 then=(F('value') - F('upper_value')) / F('value')),
-            When(value__lt=F('lower_value'),
-                 then=(F('value') - F('lower_value')) / F('value')),
-            default=Value(0.0),
-            output_field=models.FloatField(),
+            When(predicted_value__isnull=True, then=Value(None)),
+            default=Case(
+                # Handle value == 0 case explicitly
+                When(
+                    value=0,
+                    then=Case(
+                        When(upper_value__lt=0, then=Value(1.0)),
+                        When(lower_value__gt=0, then=Value(-1.0)),
+                        default=Value(0.0),
+                        output_field=models.FloatField()
+                    )
+                ),
+                # Normal anomaly detection cases
+                When(value__gt=F('upper_value'),
+                     then=(F('value') - F('upper_value')) / F('value')),
+                When(value__lt=F('lower_value'),
+                     then=(F('value') - F('lower_value')) / F('value')),
+                default=Value(0.0),
+                output_field=models.FloatField(),
+            ),
         ),
         output_field=models.FloatField(),
         # If db_persist is set to false, then the field will not be persisted in the database
