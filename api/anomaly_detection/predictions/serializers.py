@@ -55,11 +55,12 @@ class MetricTrendSerializer(ModelSerializer):
     """
     Serializer for the Metric Trend associated to the Predictor model.
     """
+    date = serializers.DateTimeField(source='last_training_date', format='%Y-%m-%d')
     trend = serializers.ListField()
 
     class Meta:
         model = Predictor
-        fields = ['trend']
+        fields = ['date', 'trend']
 
 
 class LastMetricDateSerializer(Serializer):
