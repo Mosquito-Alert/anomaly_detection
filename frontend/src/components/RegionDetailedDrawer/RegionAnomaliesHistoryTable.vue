@@ -1,28 +1,26 @@
 <template>
-  <div class="">
-    <q-table
-      flat
-      title="Anomalies history"
-      :rows="data"
-      :columns="columns"
-      :loading="loading"
-      v-model:pagination="pagination"
-      :rows-per-page-options="[5, 10, 25, 50]"
-      @request="onRequest"
-    >
-      <template v-slot:loading>
-        <q-inner-loading showing color="primary" />
-      </template>
+  <q-table
+    flat
+    title="Anomalies history"
+    :rows="data"
+    :columns="columns"
+    :loading="loading"
+    v-model:pagination="pagination"
+    :rows-per-page-options="[5, 10, 25, 50]"
+    @request="onRequest"
+  >
+    <template v-slot:loading>
+      <q-inner-loading showing color="primary" />
+    </template>
 
-      <template v-slot:body-cell-anomaly="props">
-        <q-td :props="props">
-          <div>
-            <q-badge :color="anomalyClassificationStyle(props.value)" :label="props.value" />
-          </div>
-        </q-td>
-      </template>
-    </q-table>
-  </div>
+    <template v-slot:body-cell-anomaly="props">
+      <q-td :props="props">
+        <div>
+          <q-badge :color="anomalyClassificationStyle(props.value)" :label="props.value" />
+        </div>
+      </q-td>
+    </template>
+  </q-table>
 </template>
 
 <script setup lang="ts">
@@ -78,9 +76,9 @@ const columns: QTableProps['columns'] = [
 
 const mapStore = useMapStore();
 
-const loading = computed(() => mapStore.fetchingRegionHistory);
+const loading = computed(() => mapStore.fetchingRegionMetricsHistory);
 const history = computed<PaginatedMetricList>(
-  () => mapStore.selectedRegionHistory as PaginatedMetricList,
+  () => mapStore.selectedRegionMetricsHistory as PaginatedMetricList,
 );
 const data = computed<Array<Metric>>(() => {
   if (!history.value || !history.value.results) {

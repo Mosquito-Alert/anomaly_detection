@@ -7,9 +7,11 @@ export const useMapStore = defineStore('mapStore', {
   state: () => ({
     selectedRegionMetricId: '',
     selectedRegionMetric: null as MetricDetail | null,
-    selectedRegionHistory: null as PaginatedMetricList | null,
     fetchingRegionMetric: true,
-    fetchingRegionHistory: true,
+    selectedRegionMetricsHistory: null as PaginatedMetricList | null,
+    fetchingRegionMetricsHistory: true,
+    selectedRegionMetricsAll: null as PaginatedMetricList | null,
+    fetchingRegionMetricsAll: true,
   }),
 
   getters: {
@@ -31,6 +33,18 @@ export const useMapStore = defineStore('mapStore', {
   },
 
   actions: {
+    async fetchAndSetSelectedMetric(metricUuid: string): Promise<void> {
+      try {
+        this.fetchingRegionMetric = true;
+        const response = await metricsApi.retrieve({ id: metricUuid });
+        if (response.status === 200 && response.data) {
+          this.selectedRegionMetric = response.data;
+          this.fetchingRegionMetric = false;
+        }
+      } catch (error) {
+        console.error('Error fetching selected region:', error);
+      }
+    },
     async fetchAndSetSelectedMetricHistory({
       daysSince = 30,
       page = 1,
@@ -46,7 +60,7 @@ export const useMapStore = defineStore('mapStore', {
       dateFrom.setDate(dateFrom.getDate() - daysSince);
       const dateStringFrom = dateFrom.toISOString().split('T')[0] || '';
       try {
-        this.fetchingRegionHistory = true;
+        this.fetchingRegionMetricsHistory = true;
         const response = await metricsApi.list({
           regionCode: this.selectedRegionMetric?.region?.code,
           dateFrom: dateStringFrom,
@@ -55,30 +69,40 @@ export const useMapStore = defineStore('mapStore', {
           pageSize: pageSize,
         });
         if (response.status === 200 && response.data) {
-          this.selectedRegionHistory = response.data;
-          this.fetchingRegionHistory = false;
+          this.selectedRegionMetricsHistory = response.data;
+          this.fetchingRegionMetricsHistory = false;
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
       }
     },
-    async fetchAndSetSelectedMetric(metricUuid: string): Promise<void> {
+    async fetchAndSetSelectedMetricAll(): Promise<void> {
+      // TODO: Improve this to fetch all metrics (change API to support this)
+      const daysSince = 10 * 365; // Last 10 years
+      const pageSize = 10000000; // Large page size to fetch all metrics
+      if (!this.selectedRegionMetric || !this.selectedRegionMetric?.region) return;
+
+      const dateFrom = new Date(this.selectedRegionMetric?.date || new Date());
+      dateFrom.setDate(dateFrom.getDate() - daysSince);
+      const dateStringFrom = dateFrom.toISOString().split('T')[0] || '';
+
       try {
-        this.fetchingRegionMetric = true;
-        const response = await metricsApi.retrieve({ id: metricUuid });
+        this.fetchingRegionMetricsAll = true;
+        const response = await metricsApi.list({
+          regionCode: this.selectedRegionMetric?.region?.code,
+          dateFrom: dateStringFrom,
+          dateTo: this.selectedRegionMetric.date,
+          page: 1,
+          pageSize: pageSize,
+          ordering: 'date',
+        });
         if (response.status === 200 && response.data) {
-          this.selectedRegionMetric = response.data;
-          this.fetchingRegionMetric = false;
+          this.selectedRegionMetricsAll = response.data;
+          this.fetchingRegionMetricsAll = false;
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
       }
-    },
-    clearSelectedFeatures() {
-      this.selectedRegionMetricId = '';
-      this.selectedRegionMetric = null;
-      this.selectedRegionHistory = null;
-      this.fetchingRegionMetric = true;
     },
   },
 });
