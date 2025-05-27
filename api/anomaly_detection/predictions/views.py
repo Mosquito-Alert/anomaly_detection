@@ -17,7 +17,7 @@ from vectortiles.rest_framework.renderers import MVTRenderer
 from anomaly_detection.predictions.models import Metric, MetricPredictionProgress
 from anomaly_detection.predictions.serializers import (
     LastMetricDateSerializer, MetricDetailSerializer, MetricFileSerializer,
-    MetricSeasonalitySerializer, MetricSerializer)
+    MetricSeasonalitySerializer, MetricSerializer, MetricTrendSerializer)
 from anomaly_detection.predictions.vector_layers import \
     MetricMunicipalityVectorLayer
 
@@ -147,6 +147,27 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             {"detail": f'No seasonality for metric {metric.id} found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    @action(
+        methods=['GET'],
+        detail=True,
+        url_path='trend',
+        url_name='trend',
+        serializer_class=MetricTrendSerializer
+    )
+    def get_trend(self, *args, **kwargs):
+        """
+        Action that returns the trend of a specific metric.
+        """
+        metric = self.get_object()
+        predictor = getattr(metric, 'predictor', None)
+        if predictor and predictor.trend:
+            serializer = self.get_serializer(predictor)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f'No trend for metric {metric.id} found.'},
             status=status.HTTP_404_NOT_FOUND
         )
 

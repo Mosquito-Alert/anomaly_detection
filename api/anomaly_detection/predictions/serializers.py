@@ -51,6 +51,17 @@ class MetricSeasonalitySerializer(ModelSerializer):
         fields = ['yearly']
 
 
+class MetricTrendSerializer(ModelSerializer):
+    """
+    Serializer for the Metric Trend associated to the Predictor model.
+    """
+    trend = serializers.ListField()
+
+    class Meta:
+        model = Predictor
+        fields = ['trend']
+
+
 class LastMetricDateSerializer(Serializer):
     """
     Serializer for the Metric Executions.
