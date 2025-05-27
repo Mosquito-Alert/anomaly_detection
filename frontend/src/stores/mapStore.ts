@@ -1,6 +1,11 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { metricsApi } from '../services/apiService';
-import { MetricDetail, PaginatedMetricList } from 'anomaly-detection';
+import {
+  MetricDetail,
+  MetricSeasonality,
+  MetricTrend,
+  PaginatedMetricList,
+} from 'anomaly-detection';
 import { historyPageSize } from '../constants/config';
 
 export const useMapStore = defineStore('mapStore', {
@@ -12,6 +17,10 @@ export const useMapStore = defineStore('mapStore', {
     fetchingRegionMetricsHistory: true,
     selectedRegionMetricsAll: null as PaginatedMetricList | null,
     fetchingRegionMetricsAll: true,
+    selectedRegionMetricTrend: null as MetricTrend | null,
+    fetchingRegionMetricTrend: true,
+    selectedRegionMetricSeasonality: null as MetricSeasonality | null,
+    fetchingRegionMetricSeasonality: true,
   }),
 
   getters: {
@@ -40,6 +49,8 @@ export const useMapStore = defineStore('mapStore', {
         if (response.status === 200 && response.data) {
           this.selectedRegionMetric = response.data;
           this.fetchingRegionMetric = false;
+        } else {
+          throw new Error('Failed to fetch selected region metric');
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
@@ -71,6 +82,8 @@ export const useMapStore = defineStore('mapStore', {
         if (response.status === 200 && response.data) {
           this.selectedRegionMetricsHistory = response.data;
           this.fetchingRegionMetricsHistory = false;
+        } else {
+          throw new Error('Failed to fetch history for the selected region');
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
@@ -99,9 +112,47 @@ export const useMapStore = defineStore('mapStore', {
         if (response.status === 200 && response.data) {
           this.selectedRegionMetricsAll = response.data;
           this.fetchingRegionMetricsAll = false;
+        } else {
+          throw new Error('Failed to fetch all metrics for the selected region');
         }
       } catch (error) {
         console.error('Error fetching selected region:', error);
+      }
+    },
+    async fetchAndSetSelectedMetricTrend(): Promise<void> {
+      if (!this.selectedRegionMetric || !this.selectedRegionMetric?.region) return;
+
+      try {
+        this.fetchingRegionMetricTrend = true;
+        const response = await metricsApi.trendRetrieve({
+          id: this.selectedRegionMetric?.id,
+        });
+        if (response.status === 200 && response.data) {
+          this.selectedRegionMetricTrend = response.data;
+          this.fetchingRegionMetricTrend = false;
+        } else {
+          throw new Error('Failed to fetch trend for the selected region');
+        }
+      } catch (error) {
+        console.error('Error fetching selected region trend:', error);
+      }
+    },
+    async fetchAndSetSelectedMetricSeasonality(): Promise<void> {
+      if (!this.selectedRegionMetric || !this.selectedRegionMetric?.region) return;
+
+      try {
+        this.fetchingRegionMetricSeasonality = true;
+        const response = await metricsApi.seasonalityRetrieve({
+          id: this.selectedRegionMetric?.id,
+        });
+        if (response.status === 200 && response.data) {
+          this.selectedRegionMetricSeasonality = response.data;
+          this.fetchingRegionMetricSeasonality = false;
+        } else {
+          throw new Error('Failed to fetch seasonality for the selected region');
+        }
+      } catch (error) {
+        console.error('Error fetching selected region seasonality:', error);
       }
     },
   },

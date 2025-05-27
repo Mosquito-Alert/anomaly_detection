@@ -14,7 +14,7 @@
           unelevated
           color="accent"
           icon="chevron_right"
-          @click="mapStore.$reset"
+          @click="() => mapStore.$reset()"
         />
         Ocultar
         <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
@@ -29,7 +29,7 @@
     <q-scroll-area class="drawer-content full-height q-pa-md col overflow-auto">
       <RegionSummary />
       <RegionAnomaliesChart />
-      <RegionSeasonality style="background-color: rgb(0, 255, 0, 0.5)" />
+      <RegionSeasonality />
       <RegionAnomaliesHistoryTable />
     </q-scroll-area>
   </q-drawer>
@@ -51,6 +51,8 @@ const updateDataHook = async () => {
   await mapStore.fetchAndSetSelectedMetric(mapStore.selectedRegionMetricId!);
   await mapStore.fetchAndSetSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
   await mapStore.fetchAndSetSelectedMetricAll();
+  await mapStore.fetchAndSetSelectedMetricTrend();
+  await mapStore.fetchAndSetSelectedMetricSeasonality();
 };
 
 watch(
