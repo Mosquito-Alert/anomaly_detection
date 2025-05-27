@@ -140,10 +140,10 @@ class MetricViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         """
         Action that returns the seasonality of a specific metric.
         """
-        metric = self.get_obj()
-        seasonality = Metric.objects.get(id=metric.id)['predictor']['yearly_seasonality']
-        if seasonality:
-            serializer = self.get_serializer(seasonality, many=True)
+        metric = self.get_object()
+        predictor = getattr(metric, 'predictor', None)
+        if predictor and predictor.yearly_seasonality:
+            serializer = self.get_serializer(predictor)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
             {"detail": f'No seasonality for metric {metric.id} found.'},

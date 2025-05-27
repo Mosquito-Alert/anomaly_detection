@@ -44,14 +44,11 @@ class MetricSeasonalitySerializer(ModelSerializer):
     """
     Serializer for the Metric Seasonality associated to the Predictor model.
     """
+    yearly = serializers.ListField(source='yearly_seasonality')
+
     class Meta:
         model = Predictor
         fields = ['yearly']
-        extra_kwargs = {
-            'yearly': {
-                'source': 'yearly_seasonality'
-            }
-        }
 
 
 class LastMetricDateSerializer(Serializer):
