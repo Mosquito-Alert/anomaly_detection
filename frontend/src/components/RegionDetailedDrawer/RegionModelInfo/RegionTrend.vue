@@ -15,6 +15,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { date, getCssVar } from 'quasar';
 import { useMapStore } from 'src/stores/mapStore';
 import { useUIStore } from 'src/stores/uiStore';
+import { trendDataCorrection } from 'src/utils/trendDataCorrection';
 import { computed } from 'vue';
 import VChart from 'vue-echarts';
 
@@ -39,15 +40,7 @@ const trendDate = computed((): Date => {
 });
 const trend = computed(() => {
   const data = mapStore.selectedRegionMetricTrend?.trend || [];
-  // Map each trend value with a date given the last date in the trend
-  return data.map((item: string, index: number): { date: Date; value: number } => {
-    // Number of days until the trend date given the index of the current trend value
-    const daysUntilTrendDate = trend?.value?.length - 1 - index;
-    // Calculate the date for each trend value
-    const date = new Date(trendDate.value);
-    date.setDate(date.getDate() - daysUntilTrendDate);
-    return { date, value: Number(item) * 100 };
-  });
+  return trendDataCorrection(data, trendDate.value);
 });
 
 const option = computed(() => {
