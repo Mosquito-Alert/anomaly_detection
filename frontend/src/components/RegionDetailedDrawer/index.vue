@@ -1,10 +1,5 @@
 <template>
-  <q-drawer
-    show-if-above
-    side="right"
-    :width="width"
-    class="bg-white q-pb-md overflow-hidden column"
-  >
+  <q-drawer show-if-above side="right" :width="width" class="bg-white overflow-hidden column">
     <div class="drawer-header">
       <q-separator class="q-mb-md" />
       <div class="q-drawer-hide">
@@ -26,7 +21,7 @@
       <q-separator class="q-mb-md" />
     </div>
     <!-- * CONTENT -->
-    <q-scroll-area class="drawer-content full-height q-pa-md col overflow-auto">
+    <q-scroll-area class="drawer-content full-height q-px-md col overflow-auto">
       <RegionSummary />
       <RegionAnomaliesChart />
       <RegionSeasonality />
@@ -49,10 +44,10 @@ const mapStore = useMapStore();
 const updateDataHook = async () => {
   if (!mapStore.selectedRegionMetricId) return;
   await mapStore.fetchAndSetSelectedMetric(mapStore.selectedRegionMetricId!);
-  await mapStore.fetchAndSetSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
+  await mapStore.fetchAndSetSelectedMetricSeasonality();
   await mapStore.fetchAndSetSelectedMetricAll();
   await mapStore.fetchAndSetSelectedMetricTrend();
-  await mapStore.fetchAndSetSelectedMetricSeasonality();
+  await mapStore.fetchAndSetSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
 };
 
 watch(

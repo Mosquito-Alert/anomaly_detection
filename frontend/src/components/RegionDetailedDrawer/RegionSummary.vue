@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-sm q-my-sm rounded-borders bg-blue-grey-2">
+  <div class="q-pa-sm q-mt-sm q-mb-lg rounded-borders bg-blue-grey-2">
     <div class="row q-pa-xs">
       <div class="col">
         <div class="row">

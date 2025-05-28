@@ -1,7 +1,7 @@
 <template>
   <q-table
     flat
-    title="Anomalies history"
+    title="Bites index history"
     :rows="data"
     :columns="columns"
     :loading="loading"

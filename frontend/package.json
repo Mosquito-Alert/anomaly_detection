@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
-    "anomaly-detection": "github:mosquito-alert/anomaly-detection-typescript-sdk#0.0.5",
+    "anomaly-detection": "github:mosquito-alert/anomaly-detection-typescript-sdk#0.0.6",
     "axios": "^1.2.1",
     "echarts": "^5.6.0",
     "ol": "^10.5.0",

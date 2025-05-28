@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import VChart from 'vue-echarts';
-import { date, getCssVar } from 'quasar';
+import { date } from 'quasar';
 import { useMapStore } from 'src/stores/mapStore';
 import { computed } from 'vue';
 import { use } from 'echarts/core';
@@ -93,23 +93,17 @@ const option = computed(() => {
     },
     xAxis: {
       type: 'category',
-      data: data.value.map((item) => {
-        return date.formatDate(item.date, 'YYYY-MM-DD');
-      }),
+      data: data.value.map((item) => date.formatDate(item.date, 'YYYY-MM-DD')),
       boundaryGap: false,
     },
     yAxis: {
       // min: 0, // Sets the minimum value to 0
       axisLabel: {
-        formatter: (val: any) => {
-          return (val * 100).toFixed(0) + '%'; // Converts fractions to percentages
-        },
+        formatter: (val: any) => (val * 100).toFixed(0) + '%', // Converts fractions to percentages
       },
       axisPointer: {
         label: {
-          formatter: (params: any) => {
-            return params.value.toFixed(2) + '%'; // Converts fractions to percentages
-          },
+          formatter: (params: any) => params.value.toFixed(2) + '%', // Converts fractions to percentages
         },
       },
     },
@@ -128,35 +122,28 @@ const option = computed(() => {
       {
         name: 'Actuals',
         type: 'scatter',
-        symbolSize: function (value: any, params: any) {
-          return 4;
-          // return Math.pow(params.data.anomaly_degree || 1, 2) * 10; // Adjust size based on anomaly degree
-        },
+        symbolSize: (value: any, params: any) => 4, // Math.pow(params.data.anomaly_degree || 1, 2) * 10; // Adjust size based on anomaly degree
         itemStyle: {
           color: '#909090',
         },
-        data: data.value.map((item: Metric) => {
-          return {
-            value: (item.value || 0) * 1.0,
-            anomalyDegree: item.anomaly_degree,
-            itemStyle: {
-              color:
-                item.anomaly_degree === null || item.anomaly_degree === 0
-                  ? '#909090'
-                  : item.anomaly_degree > 0
-                    ? ANOMALY_COLORS.HIGH
-                    : ANOMALY_COLORS.LOW,
-            },
-          };
-        }),
+        data: data.value.map((item: Metric) => ({
+          value: (item.value || 0) * 1.0,
+          anomalyDegree: item.anomaly_degree,
+          itemStyle: {
+            color:
+              item.anomaly_degree === null || item.anomaly_degree === 0
+                ? '#909090'
+                : item.anomaly_degree > 0
+                  ? ANOMALY_COLORS.HIGH
+                  : ANOMALY_COLORS.LOW,
+          },
+        })),
         showSymbol: false,
       },
       {
         name: 'Uncertainty interval lower bound',
         type: 'line',
-        data: data.value.map((item) => {
-          return item.lower_value;
-        }),
+        data: data.value.map((item) => item.lower_value),
         lineStyle: {
           opacity: 0,
         },
@@ -166,9 +153,7 @@ const option = computed(() => {
       {
         name: 'Uncertainty interval area',
         type: 'line',
-        data: data.value.map((item) => {
-          return (item.upper_value || 0) - (item.lower_value || 0);
-        }),
+        data: data.value.map((item) => (item.upper_value || 0) - (item.lower_value || 0)),
         lineStyle: {
           opacity: 0,
         },
@@ -181,9 +166,7 @@ const option = computed(() => {
       {
         name: 'Forecast',
         type: 'line',
-        data: data.value.map((item) => {
-          return (item.predicted_value || 0) * 1.0;
-        }),
+        data: data.value.map((item) => (item.predicted_value || 0) * 1.0),
         itemStyle: {
           color: 'rgba(237, 178, 12, 0.5)',
         },
