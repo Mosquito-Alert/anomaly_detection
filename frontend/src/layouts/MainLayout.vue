@@ -2,7 +2,7 @@
   <q-layout view="lHh Lpr lFf">
     <MainHeader />
 
-    <RegionDetailedDrawer v-if="mapStore.isRegionSelected" :width="drawerWidth.toString()" />
+    <RegionDetailedDrawer v-if="mapStore.isRegionSelected" />
 
     <q-page-container>
       <router-view />
@@ -11,10 +11,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useMapStore } from 'src/stores/mapStore';
+import { useUIStore } from 'src/stores/uiStore';
 
 const mapStore = useMapStore();
+const uiStore = useUIStore();
 
-const drawerWidth = ref(Math.max(Math.floor(window.innerWidth / 2.75), 500));
+uiStore.appWidth = window.innerWidth;
 </script>

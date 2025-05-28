@@ -24,7 +24,7 @@
     <q-scroll-area class="drawer-content full-height q-px-md col overflow-auto">
       <RegionSummary />
       <RegionAnomaliesChart />
-      <RegionSeasonality />
+      <RegionModelInfo />
       <RegionAnomaliesHistoryTable />
     </q-scroll-area>
   </q-drawer>
@@ -33,12 +33,10 @@
 <script setup lang="ts">
 import { historyPageSize } from 'src/constants/config';
 import { useMapStore } from 'src/stores/mapStore';
+import { useUIStore } from 'src/stores/uiStore';
 import { computed, onMounted, watch } from 'vue';
 
-const props = defineProps({
-  width: String,
-});
-
+const uiStore = useUIStore();
 const mapStore = useMapStore();
 
 const updateDataHook = async () => {
@@ -74,7 +72,5 @@ const title = computed(() => {
   return `${selectedRegionMetric.region.name}, ${selectedRegionMetric.region.province}`;
 });
 
-// TODO: Define an action that fetched the next page
-
-const width = props.width ? parseInt(props.width) : 500;
+const width = computed(() => Math.max(Math.floor(uiStore.appWidth / 2.75), 500));
 </script>

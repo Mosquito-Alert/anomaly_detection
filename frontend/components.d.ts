@@ -16,8 +16,11 @@ declare module 'vue' {
     RegionAnomaliesHistoryTable: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesHistoryTable.vue')['default']
     RegionAnomaliesTable: typeof import('./src/components/RegionDetailedDrawer/RegionAnomaliesTable.vue')['default']
     RegionDetailedDrawer: typeof import('./src/components/RegionDetailedDrawer/index.vue')['default']
-    RegionSeasonality: typeof import('./src/components/RegionDetailedDrawer/RegionSeasonality.vue')['default']
+    RegionModelInfo: typeof import('./src/components/RegionDetailedDrawer/RegionModelInfo/index.vue')['default']
+    RegionSeasonality: typeof import('./src/components/RegionDetailedDrawer/RegionModelInfo/RegionSeasonality.vue')['default']
+    RegionSeasonalityv2: typeof import('./src/components/RegionDetailedDrawer/RegionSeasonalityv2.vue')['default']
     RegionSummary: typeof import('./src/components/RegionDetailedDrawer/RegionSummary.vue')['default']
+    RegionTrend: typeof import('./src/components/RegionDetailedDrawer/RegionModelInfo/RegionTrend.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

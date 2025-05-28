@@ -4,6 +4,7 @@ import { metricsApi } from '../services/apiService';
 export const useUIStore = defineStore('uiStore', {
   state: () => ({
     date: '2025-01-01',
+    appWidth: window.innerWidth as number,
   }),
 
   getters: {
