@@ -1,12 +1,22 @@
 <template>
-  <q-btn
-    outline
-    color="primary"
-    label="Review Model components"
-    class="q-ma-lg"
-    @click="showModelComponents = true"
-  />
+  <q-card flat bordered id="model-info-card-button" class="q-my-lg q-mx-md">
+    <q-card-section horizontal @click="showModelComponents = true">
+      <q-card-section class="icon-query-open">
+        <!-- Color background icon, border rounded -->
+        <q-icon name="keyboard_arrow_left" size="3rem" class="" />
+      </q-card-section>
+      <q-card-section>
+        <div class="text-h6">Review Model components</div>
+        <span>Useful to understand the underlying patterns in the data.</span>
+      </q-card-section>
+      <q-card-section>
+        <!-- Color background icon, border rounded -->
+        <q-icon name="query_stats" color="primary" size="3rem" />
+      </q-card-section>
+    </q-card-section>
+  </q-card>
 
+  <!-- DIALOG -->
   <q-dialog v-model="showModelComponents">
     <q-card id="model-info-dialog" :style="{ transform: transform, width: width, maxWidth: width }">
       <q-card-section
@@ -36,10 +46,7 @@
           </q-tab-panel>
 
           <q-tab-panel name="info">
-            <p>
-              The model components are used to understand the underlying patterns in the data.
-              Currently, there are two components available:
-            </p>
+            <p>Currently, there are two components available:</p>
             <ul>
               <li><strong>Seasonality</strong> of the bites index over the year.</li>
               <li><strong>Trend</strong> of the bites index over time.</li>
@@ -72,12 +79,23 @@ const onPan = (event: any) => {
 };
 </script>
 <style scoped lang="scss">
+#model-info-card-button {
+  cursor: pointer;
+  background-color: #fdf7e6;
+  //   background-color: #f9e7b5;
+  .icon-query-open {
+    background-color: #f3c954;
+    //   background-color: #f9e7b5;
+  }
+}
 #model-info-dialog-header {
   cursor: move;
   background-color: #fdf7e6;
+  //   background-color: #f9e7b5;
 }
 
 #model-info-tab {
+  //   background-color: #fdf7e6;
   background-color: #f9e7b5;
 }
 </style>
