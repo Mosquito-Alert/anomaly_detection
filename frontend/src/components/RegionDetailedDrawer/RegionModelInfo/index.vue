@@ -8,7 +8,7 @@
   />
 
   <q-dialog v-model="showModelComponents">
-    <q-card id="model-info-dialog">
+    <q-card id="model-info-dialog" :style="{ transform: transform }">
       <q-card-section
         v-touch-pan.mouse="onPan"
         id="model-info-dialog-header"
@@ -73,7 +73,7 @@ const onPan = (event: any) => {
 <style scoped lang="scss">
 #model-info-dialog {
   max-width: v-bind(width);
-  transform: v-bind(transform);
+  //   transform: v-bind(transform);
 }
 
 #model-info-dialog-header {
