@@ -52,6 +52,9 @@ const trend = computed(() => {
   return trendDataCorrection(data, trendDate.value);
 });
 const loading = computed(() => anomaliesLoading.value || trendLoading.value);
+const percentageLastMonth = computed(() => {
+  return 100 - (30 / anomaliesData.value.length) * 100; // Assuming the last month has 30 days
+});
 
 const option = computed(() => {
   return {
@@ -121,6 +124,8 @@ const option = computed(() => {
         type: 'slider',
         show: true,
         xAxisIndex: [0],
+        start: percentageLastMonth.value,
+        end: 100,
       },
       {
         type: 'inside',
