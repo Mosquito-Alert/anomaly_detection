@@ -5,6 +5,7 @@
       class="absolute-full"
       :loadTilesWhileAnimating="true"
       :loadTilesWhileInteracting="true"
+      @pointermove="hoverFeature"
       @click="selectFeature"
     >
       <ol-view
@@ -37,6 +38,11 @@
         <ol-style :overrideStyleFunction="styleFn"></ol-style>
       </ol-vector-tile-layer>
 
+      <ol-vector-layer :z-index="9" render-mode="vector">
+        <ol-source-vector :features="hoveredFeatures" />
+        <ol-style :overrideStyleFunction="hoveredStyleFn"></ol-style>
+      </ol-vector-layer>
+
       <ol-vector-layer :z-index="10" render-mode="vector">
         <ol-source-vector :features="selectedFeatures" />
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
@@ -66,14 +72,13 @@
 </template>
 
 <script setup lang="ts">
-import { Feature, MapBrowserEvent } from 'ol';
+import { Feature, MapBrowserEvent, Overlay } from 'ol';
 import { fromLonLat } from 'ol/proj';
 import { Fill, Stroke, Style } from 'ol/style';
 import type MapRef from 'ol/Map';
-// import Tooltip from 'ol-ext/overlay/Tooltip';
-import { getCssVar, useQuasar } from 'quasar';
+import { debounce, getCssVar, useQuasar } from 'quasar';
 import { ANOMALY_COLORS } from 'src/constants/colors';
-import { computed, inject, ref, watchEffect } from 'vue';
+import { computed, inject, onMounted, ref, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
 import { useMapStore } from 'src/stores/mapStore';
 import { FeatureLike } from 'ol/Feature';
@@ -90,11 +95,22 @@ const uiStore = useUIStore();
 const mapStore = useMapStore();
 
 const selectedFeatures = ref([] as FeatureLike[]);
+const hoveredFeatures = ref([] as FeatureLike[]);
 
 const mapRef = ref<{ map: MapRef } | null>(null);
 const viewRef = ref();
 const sourceRef = ref(null);
 const layerRef = ref(null);
+
+onMounted(() => {
+  const map = mapRef.value?.map;
+  if (!map) {
+    return;
+  }
+  // map.addOverlay(hoverTooltip);
+
+  map.addOverlay(hoverOverlay);
+});
 
 const $q = useQuasar();
 
@@ -138,7 +154,6 @@ const handleSourceTileLoadEnd = () => {
 /**
  * Select and hover features
  */
-
 const layerFilter = (layerCandidate: Layer) => {
   return layerCandidate.getClassName().includes('feature-layer');
 };
@@ -162,6 +177,40 @@ const selectFeature = async (event: MapBrowserEvent<PointerEvent>) => {
   selectedFeatures.value = [firstFeature];
   mapStore.selectedRegionMetricId = firstFeature.getId() as string;
 };
+
+const tooltipEl = document.createElement('div');
+tooltipEl.className = 'custom-tooltip';
+const hoverOverlay = new Overlay({
+  element: tooltipEl,
+  offset: [-15, -5],
+  positioning: 'bottom-left',
+});
+
+const hoverFeature = async (event: MapBrowserEvent<PointerEvent>) => {
+  const map = mapRef.value?.map;
+  if (!map) {
+    return;
+  }
+
+  // store hovered feature
+  const features = map.getFeaturesAtPixel(event.pixel, {
+    hitTolerance: 0,
+    layerFilter,
+  });
+  if (!features.length) {
+    hoveredFeatures.value = [];
+    // hoverTooltip.removeFeature();
+    tooltipEl.classList.remove('visible');
+    hoverOverlay.setPosition(undefined); // hide
+    return;
+  }
+  hoveredFeatures.value = features as Feature[];
+  const feature = features[0] as FeatureLike;
+  tooltipEl.innerHTML = feature.get('region__name');
+  tooltipEl.classList.add('visible');
+  hoverOverlay.setPosition(event.coordinate);
+};
+
 // Zoom to selectedFeature
 watchEffect(() => {
   if (mapStore.isRegionSelected) {
@@ -196,12 +245,12 @@ const styleFn = (feature: Feature) => {
 };
 
 const selectedStyleFn = (feature: any) => {
-  const style = hoverStyleFn(feature);
+  const style = hoveredStyleFn(feature);
   (style.getStroke() as Stroke).setWidth(4);
   return style;
 };
 
-const hoverStyleFn = (feature: any) => {
+const hoveredStyleFn = (feature: any) => {
   const style = styleFn(feature);
 
   style.setStroke(
@@ -213,11 +262,45 @@ const hoverStyleFn = (feature: any) => {
   return style;
 };
 </script>
-<style scoped lang="scss">
+<style lang="scss">
 #map-date {
   background-color: #f3c954;
   color: #444;
   border-radius: 4px;
   border: 1px solid #edb20c;
+}
+.custom-tooltip {
+  position: relative; /* Needed for the arrow positioning */
+  background-color: rgba(0, 0, 0, 0.75); /* dark with transparency */
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.custom-tooltip.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Add a triangle pointer */
+.custom-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; /* position below the tooltip */
+  left: 10px; /* adjust to align with cursor or center */
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.75); /* same as tooltip background */
 }
 </style>

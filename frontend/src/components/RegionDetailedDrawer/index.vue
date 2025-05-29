@@ -30,7 +30,7 @@
             ><q-tooltip>
               <div v-if="!loading">
                 <p class="text-subtitle1 text-weight-light q-pa-none q-ma-none">
-                  Bites Index:
+                  Bite Index:
                   <span class="text-weight-medium">{{ metric.value }}%</span>
                 </p>
                 <p class="text-subtitle2 text-weight-light q-pa-none q-ma-none">
