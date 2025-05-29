@@ -17,6 +17,6 @@ export const trendDataCorrection = (
     // Calculate the date for each trend value
     const date = new Date(lastDate);
     date.setDate(date.getDate() - daysUntilTrendDate);
-    return { date, value: Number(item) };
+    return { date, value: Number(item) * 100 };
   });
 };

@@ -71,19 +71,21 @@ const option = computed(() => {
         },
       },
       formatter: (params: any) => {
-        const date = params[0].name || 'Unknown Date';
-        const value = params[0].value ? `${params[0].value.toFixed(2)}%` : 'N/A';
-        const lowerBound = params[1].value ? `${params[1].value.toFixed(2)}%` : 'N/A';
+        const date = params[0]?.name || 'Unknown Date';
+        const value = params[0]?.value ? `${params[0].value.toFixed(2)}%` : 'N/A';
+        const lowerBound = params[1]?.value ? `${params[1].value.toFixed(2)}%` : 'N/A';
         const upperBound =
-          params[1].value && params[2].value
+          params[1].value && params[2]?.value
             ? `${(params[1].value + params[2].value).toFixed(2)}%`
             : 'N/A';
+        const trend = params[4]?.value ? `${params[4].value.toFixed(2)}%` : 'N/A';
         return `
           <strong>${date}</strong>
           <br/><hr>
           <span>Value: ${value}</span><br/>
           <span>Lower bound: ${lowerBound}</span><br/>
           <span>Upper bound: ${upperBound}</span><br/>
+          <span>Trend: ${trend}</span><br/>
         `;
       },
     },
