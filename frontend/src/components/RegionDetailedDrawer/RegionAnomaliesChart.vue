@@ -79,6 +79,7 @@ const option = computed(() => {
             ? `${(params[1].value + params[2].value).toFixed(2)}%`
             : 'N/A';
         const trend = params[4]?.value ? `${params[4].value.toFixed(2)}%` : 'N/A';
+        // TODO: Conditionally show forecast and trend depending if they are disabled or not in the UI
         return `
           <strong>${date}</strong>
           <br/><hr>

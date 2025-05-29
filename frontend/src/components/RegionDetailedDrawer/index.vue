@@ -1,19 +1,18 @@
 <template>
-  <q-drawer show-if-above side="right" :width="width" class="bg-white overflow-hidden column">
+  <q-drawer show-if-above side="left" :width="width" class="bg-white overflow-hidden column">
     <div class="drawer-header">
-      <q-separator class="q-mb-md" />
-      <div class="q-drawer-hide">
-        <q-btn
-          dense
-          round
-          unelevated
-          color="accent"
-          icon="chevron_right"
-          @click="() => mapStore.$reset()"
-        />
-        Ocultar
-        <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
-      </div>
+      <q-btn
+        dense
+        flat
+        icon="close"
+        size="0.85rem"
+        color="primary"
+        class="q-drawer-hide absolute"
+        style="top: 1rem; right: 1rem"
+        @click="() => mapStore.$reset()"
+      />
+
+      <!-- TODO: Improve (remove text, move it to the left so the icon is in the middle of the line) -->
 
       <h2 class="text-h2 q-py-lg q-px-md q-ma-none">
         {{ title }}

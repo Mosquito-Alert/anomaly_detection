@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="lHh lpR lFf">
     <MainHeader />
 
     <RegionDetailedDrawer v-if="mapStore.isRegionSelected" />
