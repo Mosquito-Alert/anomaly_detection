@@ -131,7 +131,13 @@ const option = computed(() => {
       {
         name: 'Actuals',
         type: 'scatter',
-        symbolSize: (value: any, params: any) => 4, // Math.pow(params.data.anomaly_degree || 1, 2) * 10; // Adjust size based on anomaly degree
+        symbolSize: (value: any, params: any) => {
+          const minSize = 4; // Minimum size for the symbol
+          const maxSize = 20; // Maximum size for the symbol
+          const anomalyDegree = params.data.anomalyDegree || 0;
+          if (anomalyDegree === 0) return minSize; // Return minimum size for non-anomalous points
+          return minSize + Math.abs(anomalyDegree) * (maxSize - minSize);
+        }, // Adjust size based on anomaly degree
         itemStyle: {
           color: '#909090',
         },
@@ -152,7 +158,7 @@ const option = computed(() => {
       {
         name: 'Uncertainty interval lower bound',
         type: 'line',
-        data: anomaliesData.value.map((item) => item.lower_value),
+        data: anomaliesData.value.map((item) => (item.lower_value || 0) * 100),
         lineStyle: {
           opacity: 0,
         },
@@ -162,7 +168,9 @@ const option = computed(() => {
       {
         name: 'Uncertainty interval area',
         type: 'line',
-        data: anomaliesData.value.map((item) => (item.upper_value || 0) - (item.lower_value || 0)),
+        data: anomaliesData.value.map(
+          (item) => (item.upper_value || 0) * 100 - (item.lower_value || 0) * 100,
+        ),
         lineStyle: {
           opacity: 0,
         },
@@ -175,7 +183,7 @@ const option = computed(() => {
       {
         name: 'Forecast',
         type: 'line',
-        data: anomaliesData.value.map((item) => (item.predicted_value || 0) * 1.0),
+        data: anomaliesData.value.map((item) => (item.predicted_value || 0) * 100),
         itemStyle: {
           color: 'rgba(237, 178, 12, 0.5)',
         },

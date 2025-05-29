@@ -21,12 +21,12 @@
         <span class="text-weight-light">Confidence levels</span>
       </div>
       <div class="row flex items-center justify-center">
-        <span class="text-weight-light self-end q-mr-xs">max.</span>
-        <span class="text-h6" v-if="!loading">{{ metric.upper_value }}%</span>
-        <q-skeleton class="text-h6 col-4" v-if="loading" />
-        <q-separator vertical class="q-mx-md" />
         <span class="text-weight-light self-end q-mr-xs">min.</span>
         <span class="text-h6" v-if="!loading">{{ metric.lower_value }}%</span>
+        <q-skeleton class="text-h6 col-4" v-if="loading" />
+        <q-separator vertical class="q-mx-md" />
+        <span class="text-weight-light self-end q-mr-xs">max.</span>
+        <span class="text-h6" v-if="!loading">{{ metric.upper_value }}%</span>
         <q-skeleton class="text-h6 col-4" v-if="loading" />
       </div>
     </div>

@@ -1,7 +1,7 @@
 <template>
+  <h6 class="q-my-md q-ml-sm text-weight-regular" style="color: #333">Last month history</h6>
   <q-table
     flat
-    title="Bites index history"
     :rows="data"
     :columns="columns"
     :loading="loading"
