@@ -7,7 +7,7 @@
       position="calc(50% - 11px) center"
       fit="contain"
       src="~assets/logo_horizontal_black.png"
-      height="30px"
+      height="2.5rem"
     />
   </q-page>
 </template>
