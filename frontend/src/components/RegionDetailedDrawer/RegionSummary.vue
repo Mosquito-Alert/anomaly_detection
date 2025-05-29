@@ -7,7 +7,6 @@
           <q-space />
           <q-badge :label="status" :color="statusColorName" v-if="!loading"></q-badge>
         </div>
-        <!-- TODO: (For the 3 values): change font size relative to the width so the info is well framed  -->
         <div class="row justify-center">
           <span class="text-h1" v-if="!loading">{{ metric.value }}%</span>
           <q-skeleton class="text-h1 full-width" v-if="loading" />

@@ -1,12 +1,14 @@
 <template>
   <div class="bg-white rounded-borders">
+    <h6 class="q-my-sm q-ml-sm text-weight-regular" style="color: #333">Time Series</h6>
+    <!-- TODO: Button to show/conceal points that aren't anomalies -->
     <v-chart style="height: 250px" :option="option" :loading="loading" />
   </div>
 </template>
 
 <script setup lang="ts">
 import VChart from 'vue-echarts';
-import { date } from 'quasar';
+import { date, getCssVar } from 'quasar';
 import { useMapStore } from 'src/stores/mapStore';
 import { computed } from 'vue';
 import { use } from 'echarts/core';
@@ -21,7 +23,10 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { LineChart, ScatterChart } from 'echarts/charts';
 import { ANOMALY_COLORS } from 'src/constants/colors';
 import { Metric } from 'anomaly-detection';
+import { trendDataCorrection } from 'src/utils/trendDataCorrection';
+import { useUIStore } from 'src/stores/uiStore';
 
+const uiStore = useUIStore();
 const mapStore = useMapStore();
 use([
   TooltipComponent,
@@ -34,22 +39,22 @@ use([
   DataZoomComponent,
 ]);
 
-const loading = computed(() => mapStore.fetchingRegionMetricsAll);
-const data = computed(() => mapStore.selectedRegionMetricsAll?.results || []);
+const anomaliesLoading = computed(() => mapStore.fetchingRegionMetricsAll);
+const anomaliesData = computed(() => mapStore.selectedRegionMetricsAll?.results || []);
+const trendLoading = computed(() => mapStore.fetchingRegionMetricTrend);
+const trendDate = computed((): Date => {
+  return mapStore.selectedRegionMetricTrend?.date
+    ? new Date(mapStore.selectedRegionMetricTrend.date)
+    : new Date(uiStore.date); // Default to the data date if no trend date is available
+});
+const trend = computed(() => {
+  const data = mapStore.selectedRegionMetricTrend?.trend || [];
+  return trendDataCorrection(data, trendDate.value);
+});
+const loading = computed(() => anomaliesLoading.value || trendLoading.value);
 
 const option = computed(() => {
   return {
-    title: {
-      text: 'Bites index time series',
-      left: 'left',
-      top: 'top',
-      textStyle: {
-        fontFamily: 'Roboto', // Set the font family
-        fontSize: 20, // Adjust font size as needed
-        fontWeight: '400', // Optional: make it bold
-        color: '#333', // Optional: customize the color
-      },
-    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -67,11 +72,11 @@ const option = computed(() => {
       },
       formatter: (params: any) => {
         const date = params[0].name || 'Unknown Date';
-        const value = params[0].value ? `${(params[0].value * 100).toFixed(2)}%` : 'N/A';
-        const lowerBound = params[1].value ? `${(params[1].value * 100).toFixed(2)}%` : 'N/A';
+        const value = params[0].value ? `${params[0].value.toFixed(2)}%` : 'N/A';
+        const lowerBound = params[1].value ? `${params[1].value.toFixed(2)}%` : 'N/A';
         const upperBound =
           params[1].value && params[2].value
-            ? `${((params[1].value + params[2].value) * 100).toFixed(2)}%`
+            ? `${(params[1].value + params[2].value).toFixed(2)}%`
             : 'N/A';
         return `
           <strong>${date}</strong>
@@ -83,7 +88,8 @@ const option = computed(() => {
       },
     },
     legend: {
-      data: ['Actuals', 'Forecast'],
+      // TODO: Trend to Interannual Trend
+      data: ['Actuals', 'Forecast', 'Trend'],
     },
     grid: {
       left: '3%',
@@ -93,13 +99,13 @@ const option = computed(() => {
     },
     xAxis: {
       type: 'category',
-      data: data.value.map((item) => date.formatDate(item.date, 'YYYY-MM-DD')),
+      data: anomaliesData.value.map((item) => date.formatDate(item.date, 'YYYY-MM-DD')),
       boundaryGap: false,
     },
     yAxis: {
       // min: 0, // Sets the minimum value to 0
       axisLabel: {
-        formatter: (val: any) => (val * 100).toFixed(0) + '%', // Converts fractions to percentages
+        formatter: (val: any) => val.toFixed(0) + '%', // Converts fractions to percentages
       },
       axisPointer: {
         label: {
@@ -126,8 +132,8 @@ const option = computed(() => {
         itemStyle: {
           color: '#909090',
         },
-        data: data.value.map((item: Metric) => ({
-          value: (item.value || 0) * 1.0,
+        data: anomaliesData.value.map((item: Metric) => ({
+          value: (item.value || 0) * 100,
           anomalyDegree: item.anomaly_degree,
           itemStyle: {
             color:
@@ -143,7 +149,7 @@ const option = computed(() => {
       {
         name: 'Uncertainty interval lower bound',
         type: 'line',
-        data: data.value.map((item) => item.lower_value),
+        data: anomaliesData.value.map((item) => item.lower_value),
         lineStyle: {
           opacity: 0,
         },
@@ -153,7 +159,7 @@ const option = computed(() => {
       {
         name: 'Uncertainty interval area',
         type: 'line',
-        data: data.value.map((item) => (item.upper_value || 0) - (item.lower_value || 0)),
+        data: anomaliesData.value.map((item) => (item.upper_value || 0) - (item.lower_value || 0)),
         lineStyle: {
           opacity: 0,
         },
@@ -166,9 +172,18 @@ const option = computed(() => {
       {
         name: 'Forecast',
         type: 'line',
-        data: data.value.map((item) => (item.predicted_value || 0) * 1.0),
+        data: anomaliesData.value.map((item) => (item.predicted_value || 0) * 1.0),
         itemStyle: {
           color: 'rgba(237, 178, 12, 0.5)',
+        },
+        showSymbol: false,
+      },
+      {
+        name: 'Trend',
+        type: 'line',
+        data: trend.value.map((item) => item.value * 1.0),
+        itemStyle: {
+          color: getCssVar('accent'),
         },
         showSymbol: false,
       },

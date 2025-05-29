@@ -22,9 +22,9 @@
     </div>
     <!-- * CONTENT -->
     <q-scroll-area class="drawer-content full-height q-px-md col overflow-auto">
-      <RegionSummary />
       <RegionAnomaliesChart />
-      <RegionModelInfo />
+      <RegionSeasonality />
+      <RegionSummary />
       <RegionAnomaliesHistoryTable />
     </q-scroll-area>
   </q-drawer>

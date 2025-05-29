@@ -1,4 +1,5 @@
 <template>
+  <h6 class="q-mt-lg q-mb-none q-ml-sm text-weight-regular" style="color: #333">Seasonality</h6>
   <v-chart style="height: 250px" :option="option" :loading="loading" />
 </template>
 
@@ -14,7 +15,7 @@ import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { date, getCssVar } from 'quasar';
 import { useMapStore } from 'src/stores/mapStore';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import VChart from 'vue-echarts';
 
 use([
@@ -40,17 +41,6 @@ const data = computed(() => {
 
 const option = computed(() => {
   return {
-    title: {
-      text: 'Seasonality component',
-      left: 'left',
-      top: 'top',
-      textStyle: {
-        fontFamily: 'Roboto', // Set the font family
-        fontSize: 20, // Adjust font size as needed
-        fontWeight: '400', // Optional: make it bold
-        color: '#333', // Optional: customize the color
-      },
-    },
     tooltip: {
       trigger: 'axis',
       formatter: (params: any) => {
@@ -66,6 +56,13 @@ const option = computed(() => {
     },
     yAxis: {
       type: 'value',
+    },
+    grid: {
+      top: '20%',
+      left: '3%',
+      right: '4%',
+      bottom: '20%',
+      containLabel: true,
     },
     series: [
       {
