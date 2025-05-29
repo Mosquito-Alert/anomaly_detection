@@ -1,32 +1,33 @@
 <template>
-  <div class="q-pa-sm q-mt-sm q-mb-lg rounded-borders bg-blue-grey-2">
-    <div class="row q-pa-xs">
-      <div class="col">
-        <div class="row">
-          <span class="text-weight-light">Bites Index</span>
-          <q-space />
-          <q-badge :label="status" :color="statusColorName" v-if="!loading"></q-badge>
-        </div>
-        <div class="row justify-center">
-          <span class="text-h1" v-if="!loading">{{ metric.value }}%</span>
-          <q-skeleton class="text-h1 full-width" v-if="loading" />
-        </div>
+  <h6 class="q-my-sm q-mb-md q-ml-sm text-weight-regular" style="color: #333">Summary</h6>
+  <div
+    class="q-pa-md q-mt-sm q-mb-lg row q-pa-xs rounded-borders"
+    style="background-color: #fdf7e6"
+  >
+    <div class="col">
+      <div class="row">
+        <span class="text-weight-light">Bites Index</span>
+        <q-space />
+        <q-badge :label="status" :color="statusColorName" v-if="!loading"></q-badge>
       </div>
-      <q-separator vertical class="q-mx-md" />
-      <div class="col">
-        <div class="row">
-          <span class="text-weight-light">Confidence levels</span>
-        </div>
-        <div class="row flex items-center justify-center">
-          <span class="text-weight-light self-end">max.</span>
-          <span class="text-h3" v-if="!loading">{{ metric.upper_value }}%</span>
-          <q-skeleton class="text-h3 col-4" v-if="loading" />
-        </div>
-        <div class="row flex items-center justify-center">
-          <span class="text-weight-light self-end">min.</span>
-          <span class="text-h3" v-if="!loading">{{ metric.lower_value }}%</span>
-          <q-skeleton class="text-h3 col-4" v-if="loading" />
-        </div>
+      <div class="row justify-center">
+        <span class="text-h5 text-weight-medium" v-if="!loading">{{ metric.value }}%</span>
+        <q-skeleton class="text-h6 full-width" v-if="loading" />
+      </div>
+    </div>
+    <q-separator vertical class="q-mx-md" />
+    <div class="col">
+      <div class="row">
+        <span class="text-weight-light">Confidence levels</span>
+      </div>
+      <div class="row flex items-center justify-center">
+        <span class="text-weight-light self-end q-mr-xs">max.</span>
+        <span class="text-h6" v-if="!loading">{{ metric.upper_value }}%</span>
+        <q-skeleton class="text-h6 col-4" v-if="loading" />
+        <q-separator vertical class="q-mx-md" />
+        <span class="text-weight-light self-end q-mr-xs">min.</span>
+        <span class="text-h6" v-if="!loading">{{ metric.lower_value }}%</span>
+        <q-skeleton class="text-h6 col-4" v-if="loading" />
       </div>
     </div>
   </div>

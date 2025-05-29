@@ -27,7 +27,22 @@
             :color="statusColorName"
             class="q-py-sm q-px-md q-mt-xs"
             v-if="!loading"
-          ></q-badge>
+            ><q-tooltip>
+              <div v-if="!loading">
+                <p class="text-subtitle1 text-weight-light q-pa-none q-ma-none">
+                  Bites Index:
+                  <span class="text-weight-medium">{{ metric.value }}%</span>
+                </p>
+                <p class="text-subtitle2 text-weight-light q-pa-none q-ma-none">
+                  Confidence levels:
+                  <span class="text-weight-regular"
+                    >[{{ metric.upper_value }}%, {{ metric.lower_value }}%]</span
+                  >
+                </p>
+              </div>
+            </q-tooltip>
+          </q-badge>
+          <q-skeleton class="text-h6 full-width" v-if="loading" />
         </div>
       </div>
     </div>
