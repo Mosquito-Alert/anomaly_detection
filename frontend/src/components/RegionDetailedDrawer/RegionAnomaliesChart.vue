@@ -53,7 +53,7 @@ const trend = computed(() => {
 });
 const loading = computed(() => anomaliesLoading.value || trendLoading.value);
 const percentageLastMonth = computed(() => {
-  return 100 - (30 / anomaliesData.value.length) * 100; // Assuming the last month has 30 days
+  return 100 - ((365 * 1) / anomaliesData.value.length) * 100; // Assuming the last month has 30 days
 });
 
 const option = computed(() => {
@@ -137,11 +137,12 @@ const option = computed(() => {
         name: 'Actuals',
         type: 'scatter',
         symbolSize: (value: any, params: any) => {
-          const minSize = 4; // Minimum size for the symbol
-          const maxSize = 20; // Maximum size for the symbol
+          const defaultSize = 2; // Default size for the symbol
+          const minAnomalySize = 12; // Minimum size for the symbol
+          const maxAnomalySize = 25; // Maximum size for the symbol
           const anomalyDegree = params.data.anomalyDegree || 0;
-          if (anomalyDegree === 0) return minSize; // Return minimum size for non-anomalous points
-          return minSize + Math.abs(anomalyDegree) * (maxSize - minSize);
+          if (anomalyDegree === 0) return defaultSize; // Return minimum size for non-anomalous points
+          return minAnomalySize + Math.abs(anomalyDegree) * (maxAnomalySize - minAnomalySize);
         }, // Adjust size based on anomaly degree
         itemStyle: {
           color: '#909090',

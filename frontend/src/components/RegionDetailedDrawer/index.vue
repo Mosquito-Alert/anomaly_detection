@@ -21,7 +21,7 @@
           </p>
         </div>
         <div class="col self-end">
-          <span>Bites Index</span>
+          <!-- <span>Anomaly</span> -->
           <q-badge
             :label="status"
             :color="statusColorName"
@@ -36,7 +36,7 @@
                 <p class="text-subtitle2 text-weight-light q-pa-none q-ma-none">
                   Confidence levels:
                   <span class="text-weight-regular"
-                    >[{{ metric.upper_value }}%, {{ metric.lower_value }}%]</span
+                    >[{{ metric.lower_value }}%, {{ metric.upper_value }}%]</span
                   >
                 </p>
               </div>
@@ -46,10 +46,9 @@
         </div>
       </div>
     </div>
-    <q-separator class="q-mb-md" />
     <!-- * CONTENT -->
-    <q-scroll-area class="drawer-content full-height q-px-md col overflow-auto">
-      <RegionAnomaliesChart />
+    <q-scroll-area class="drawer-content full-height q-px-md q-py-xs col overflow-auto">
+      <RegionAnomaliesChart class="q-pt-sm" />
       <RegionSeasonality />
       <RegionSummary />
       <RegionAnomaliesHistoryTable />
