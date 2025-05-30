@@ -23,5 +23,6 @@ declare module 'vue' {
     RegionTrend: typeof import('./src/components/RegionDetailedDrawer/RegionModelInfo/RegionTrend.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchBox: typeof import('./src/components/SearchBox.vue')['default']
   }
 }

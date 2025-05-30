@@ -130,5 +130,5 @@ const statusColorName = computed(() => {
   return anomalyClassificationStyle(status.value || AnomalyClassificationEnum.N_A);
 });
 
-const width = computed(() => Math.max(Math.floor(uiStore.appWidth / 2.75), 500));
+const width = computed(() => uiStore.drawerWidth);
 </script>

@@ -56,18 +56,9 @@
         />
       </ol-tile-layer>
 
+      <ol-zoom-control />
       <ol-scaleline-control />
     </ol-map>
-    <q-page-sticky position="top-right" :offset="[20, 20]">
-      <span
-        class="q-px-md q-py-xs text-weight-medium text-subtitle1"
-        id="map-date"
-        v-if="!uiStore.fetchingDate"
-      >
-        {{ uiStore.formattedDate }}
-      </span>
-      <q-skeleton type="QBadge" v-if="uiStore.fetchingDate" />
-    </q-page-sticky>
   </q-page>
 </template>
 
@@ -83,7 +74,6 @@ import { Layer } from 'ol/layer';
 import { useMapStore } from 'src/stores/mapStore';
 import { FeatureLike } from 'ol/Feature';
 import { Geometry } from 'ol/geom';
-import { useUIStore } from 'src/stores/uiStore';
 
 const props = defineProps({
   date: {
@@ -91,7 +81,6 @@ const props = defineProps({
     required: true,
   },
 });
-const uiStore = useUIStore();
 const mapStore = useMapStore();
 
 const selectedFeatures = ref([] as FeatureLike[]);

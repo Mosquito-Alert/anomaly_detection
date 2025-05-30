@@ -18,4 +18,5 @@ const mapStore = useMapStore();
 const uiStore = useUIStore();
 
 uiStore.appWidth = window.innerWidth;
+uiStore.drawerWidth = Math.max(Math.floor(uiStore.appWidth / 2.75), 500);
 </script>
