@@ -16,6 +16,7 @@ import {
   DataZoomComponent,
   GridComponent,
   LegendComponent,
+  MarkLineComponent,
   TitleComponent,
   TooltipComponent,
 } from 'echarts/components';
@@ -37,6 +38,7 @@ use([
   TitleComponent,
   LegendComponent,
   DataZoomComponent,
+  MarkLineComponent,
 ]);
 
 const anomaliesLoading = computed(() => mapStore.fetchingRegionMetricsAll);
@@ -53,7 +55,14 @@ const trend = computed(() => {
 });
 const loading = computed(() => anomaliesLoading.value || trendLoading.value);
 const percentageLastMonth = computed(() => {
-  return 100 - ((365 * 1) / anomaliesData.value.length) * 100; // Assuming the last month has 30 days
+  return 100 - ((365 * 2) / anomaliesData.value.length) * 100; // Assuming the last month has 30 days
+});
+const indexToday = computed(() => {
+  const today = new Date(uiStore.date);
+  const todayString = date.formatDate(today, 'YYYY-MM-DD');
+  return anomaliesData.value.findIndex(
+    (item) => date.formatDate(item.date, 'YYYY-MM-DD') === todayString,
+  );
 });
 
 const option = computed(() => {
@@ -160,6 +169,20 @@ const option = computed(() => {
           },
         })),
         showSymbol: false,
+        markLine: {
+          data: [
+            {
+              name: "Today's mark",
+              xAxis: indexToday.value,
+              label: {
+                padding: [0, 58, 0, 0],
+                formatter: () => uiStore.formattedDate,
+                color: getCssVar('accent'),
+              },
+            },
+          ],
+          symbol: ['none', 'none'],
+        },
       },
       {
         name: 'Uncertainty interval lower bound',

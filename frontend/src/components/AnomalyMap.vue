@@ -76,7 +76,7 @@ import { Feature, MapBrowserEvent, Overlay } from 'ol';
 import { fromLonLat } from 'ol/proj';
 import { Fill, Stroke, Style } from 'ol/style';
 import type MapRef from 'ol/Map';
-import { debounce, getCssVar, useQuasar } from 'quasar';
+import { getCssVar, useQuasar } from 'quasar';
 import { ANOMALY_COLORS } from 'src/constants/colors';
 import { computed, inject, onMounted, ref, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
