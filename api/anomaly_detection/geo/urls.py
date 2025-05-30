@@ -1,12 +1,13 @@
 
 
-from django.urls import path
-# from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter
 
-from anomaly_detection.geo.views import GEOViewSet
+from anomaly_detection.geo import views
 
-app_name = 'geo'
+router = DefaultRouter()
 
-urlpatterns = [
-    path('geo/tiles/<int:z>/<int:x>/<int:y>', GEOViewSet.as_view(), name='geo-region'),
-]
+router.register('regions', views.RegionViewSet, basename='regions')
+
+app_name = 'regions'
+
+urlpatterns = router.urls
