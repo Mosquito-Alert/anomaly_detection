@@ -8,7 +8,7 @@ from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
 from anomaly_detection.geo.models import Municipality
-from anomaly_detection.geo.serializers import MunicipalitySerializer
+from anomaly_detection.geo.serializers import MunicipalityRetrieveSerializer, MunicipalitySerializer
 from anomaly_detection.geo.vector_layers import MunicipalityVectorLayer, ProvinceVectorLayer
 
 
@@ -86,4 +86,5 @@ class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         geometry = self.request.query_params.get('geometry', None)
         if self.action == 'retrieve' and geometry and geometry.lower() == 'true':
             kwargs['context'] = {'geometry': True}
+            return MunicipalityRetrieveSerializer(*args, **kwargs)
         return super().get_serializer(*args, **kwargs)
