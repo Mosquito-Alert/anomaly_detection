@@ -70,7 +70,7 @@ const searchFilterFn = async (val: string, update: any, abort: any) => {
       });
       if (response.status === 200 && response.data.results) {
         suggestions.value = response.data.results.map((region: any) => ({
-          label: region.name,
+          label: `${region.name}, ${region.province}`,
           value: region.code,
           id: region.id,
         }));
