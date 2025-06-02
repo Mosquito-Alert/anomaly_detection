@@ -44,7 +44,7 @@
       </ol-vector-layer>
 
       <ol-vector-layer :z-index="10" render-mode="vector">
-        <ol-source-vector :features="selectedFeatures" />
+        <ol-source-vector :features="mapStore.selectedFeatures" />
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
       </ol-vector-layer>
 
@@ -83,7 +83,6 @@ const props = defineProps({
 });
 const mapStore = useMapStore();
 
-const selectedFeatures = ref([] as FeatureLike[]);
 const hoveredFeatures = ref([] as FeatureLike[]);
 
 const mapRef = ref<{ map: MapRef } | null>(null);
@@ -125,11 +124,11 @@ const labelsLayer = ref({
   opaque: false,
 });
 const format = inject('ol-format');
-const mvtFormat = new format.MVT({ idProperty: 'id' });
+const MVTFormat = new format.MVT({ idProperty: 'id' });
 const anomalyLayer = computed(() => {
   return {
     url: `/api/metrics/tiles/{z}/{x}/{y}/?date=${props.date}`,
-    format: mvtFormat,
+    format: MVTFormat,
   };
 });
 
@@ -163,7 +162,7 @@ const selectFeature = async (event: MapBrowserEvent<PointerEvent>) => {
   }
   // So only one feature is selected
   const firstFeature = features[0] as Feature;
-  selectedFeatures.value = [firstFeature];
+  mapStore.selectedFeatures = [firstFeature];
   mapStore.selectedRegionMetricId = firstFeature.getId() as string;
 };
 
@@ -202,8 +201,8 @@ const hoverFeature = async (event: MapBrowserEvent<PointerEvent>) => {
 
 // Zoom to selectedFeature
 watchEffect(() => {
-  if (mapStore.isRegionSelected) {
-    const feature = selectedFeatures.value[0] as FeatureLike;
+  if (mapStore.isRegionSelected && mapStore.selectedFeatures.length > 0) {
+    const feature = mapStore.selectedFeatures[0] as FeatureLike;
     const geometry = feature.getGeometry() as Geometry;
     viewRef.value.view.fit(geometry.getExtent(), {
       padding: [250, 250, 250, 250], //Padding around the feature

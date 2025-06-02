@@ -8,6 +8,7 @@
     v-model:pagination="pagination"
     :rows-per-page-options="[5, 10, 25, 50]"
     @request="onRequest"
+    :hide-bottom="data.length > 0"
   >
     <template v-slot:loading>
       <q-inner-loading showing color="primary" />
@@ -108,7 +109,7 @@ watch(
 const onRequest = async (props: any) => {
   const { page, rowsPerPage } = props.pagination;
 
-  const returnedData = await mapStore.fetchAndSetSelectedMetricHistory({
+  const returnedData = await mapStore.fetchSelectedMetricHistory({
     page: page,
     pageSize: rowsPerPage,
   });

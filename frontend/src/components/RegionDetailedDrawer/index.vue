@@ -73,11 +73,11 @@ const mapStore = useMapStore();
 
 const updateDataHook = async () => {
   if (!mapStore.selectedRegionMetricId) return;
-  await mapStore.fetchAndSetSelectedMetric(mapStore.selectedRegionMetricId!);
-  await mapStore.fetchAndSetSelectedMetricSeasonality();
-  await mapStore.fetchAndSetSelectedMetricAll();
-  await mapStore.fetchAndSetSelectedMetricTrend();
-  await mapStore.fetchAndSetSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
+  await mapStore.fetchSelectedMetric(mapStore.selectedRegionMetricId!);
+  await mapStore.fetchSelectedMetricSeasonality();
+  await mapStore.fetchSelectedMetricAll();
+  await mapStore.fetchSelectedMetricTrend();
+  await mapStore.fetchSelectedMetricHistory({ page: 1, pageSize: historyPageSize });
 };
 
 const metric = computed<MetricDetail>(() => mapStore.getFormattedRegionMetric as MetricDetail);

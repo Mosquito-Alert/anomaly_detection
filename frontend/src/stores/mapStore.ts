@@ -1,16 +1,21 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { metricsApi } from '../services/apiService';
+import { metricsApi, regionsApi } from '../services/apiService';
 import {
   MetricDetail,
   MetricSeasonality,
   MetricTrend,
+  Municipality,
   PaginatedMetricList,
 } from 'anomaly-detection';
 import { historyPageSize } from '../constants/config';
+import { FeatureLike } from 'ol/Feature';
+import { GeoJSON } from 'ol/format';
 
 export const useMapStore = defineStore('mapStore', {
   state: () => ({
     selectedRegionMetricId: '',
+    selectedFeatures: [] as FeatureLike[],
+    selectedRegion: null as Municipality | null,
     selectedRegionMetric: null as MetricDetail | null,
     fetchingRegionMetric: true,
     selectedRegionMetricsHistory: null as PaginatedMetricList | null,
@@ -42,7 +47,23 @@ export const useMapStore = defineStore('mapStore', {
   },
 
   actions: {
-    async fetchAndSetSelectedMetric(metricUuid: string): Promise<void> {
+    async fetchSelectedRegion(id: number): Promise<void> {
+      try {
+        const response = await regionsApi.retrieve({ id: id });
+        if (response.status === 200 && response.data) {
+          const format = new GeoJSON();
+          const feature = format.readFeature(response.data.geometry, {
+            featureProjection: 'EPSG:3857',
+          });
+          this.selectedFeatures = [feature as FeatureLike];
+        } else {
+          throw new Error('Failed to fetch selected region');
+        }
+      } catch (error) {
+        console.error('Error fetching selected region:', error);
+      }
+    },
+    async fetchSelectedMetric(metricUuid: string): Promise<void> {
       try {
         this.fetchingRegionMetric = true;
         const response = await metricsApi.retrieve({ id: metricUuid });
@@ -56,7 +77,7 @@ export const useMapStore = defineStore('mapStore', {
         console.error('Error fetching selected region:', error);
       }
     },
-    async fetchAndSetSelectedMetricHistory({
+    async fetchSelectedMetricHistory({
       daysSince = 30,
       page = 1,
       pageSize = historyPageSize,
@@ -89,7 +110,7 @@ export const useMapStore = defineStore('mapStore', {
         console.error('Error fetching selected region:', error);
       }
     },
-    async fetchAndSetSelectedMetricAll(): Promise<void> {
+    async fetchSelectedMetricAll(): Promise<void> {
       // TODO: Improve this to fetch all metrics (change API to support this)
       const daysSince = 10 * 365; // Last 10 years
       const pageSize = 10000000; // Large page size to fetch all metrics
@@ -119,7 +140,7 @@ export const useMapStore = defineStore('mapStore', {
         console.error('Error fetching selected region:', error);
       }
     },
-    async fetchAndSetSelectedMetricTrend(): Promise<void> {
+    async fetchSelectedMetricTrend(): Promise<void> {
       if (!this.selectedRegionMetric || !this.selectedRegionMetric?.region) return;
 
       try {
@@ -137,7 +158,7 @@ export const useMapStore = defineStore('mapStore', {
         console.error('Error fetching selected region trend:', error);
       }
     },
-    async fetchAndSetSelectedMetricSeasonality(): Promise<void> {
+    async fetchSelectedMetricSeasonality(): Promise<void> {
       if (!this.selectedRegionMetric || !this.selectedRegionMetric?.region) return;
 
       try {
