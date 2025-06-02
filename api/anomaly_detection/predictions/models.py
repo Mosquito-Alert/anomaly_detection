@@ -29,7 +29,7 @@ class Predictor(models.Model):
     Model to store the predictor model and the prediction results.
     """
     EXPIRY_DAYS = 30
-    MIN_DAYS_FOR_TRAINING = 60
+    MIN_DAYS_FOR_TRAINING = int(365*2.5)  # Prophet needs at least 2.5 cycles for quality training
 
     region = models.ForeignKey(
         Municipality,

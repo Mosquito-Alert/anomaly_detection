@@ -1,7 +1,7 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
@@ -32,24 +32,25 @@ from anomaly_detection.geo.vector_layers import MunicipalityVectorLayer, Provinc
 
         ]
     ),
+    retrieve=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='geometry',
+                type=OpenApiTypes.BOOL,
+                description='Geometry.',
+                required=False,
+                default=False
+            ),
+        ]
+    ),
 )
-class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
+class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
     ViewSet for the Municipality model with MVT rendering.
     """
-    queryset = Municipality.objects.all()  # .with_geometry().all()
-    layer_classes = [MunicipalityVectorLayer, ProvinceVectorLayer]
+    queryset = Municipality.objects
     serializer_class = MunicipalitySerializer
-
-    def get_queryset(self):
-        """
-        Override the default queryset to filter by region name if provided.
-        """
-        queryset = super().get_queryset()
-        region_name = self.request.query_params.get('region_name', None)
-        if region_name:
-            queryset = queryset.filter(name__icontains=region_name)
-        return queryset
+    layer_classes = [MunicipalityVectorLayer, ProvinceVectorLayer]
 
     @action(
         methods=['GET'],
@@ -64,3 +65,25 @@ class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin):
         z, x, y = int(z), int(x), int(y)
         content, status = self.get_content_status(z, x, y)
         return Response(content, status=status)
+
+    def get_queryset(self):
+        """
+        Override the default queryset to filter by region name if provided.
+        """
+        queryset = super().get_queryset()
+        region_name = self.request.query_params.get('region_name', None)
+        geometry = self.request.query_params.get('geometry', None)
+        if self.action == 'retrieve' and geometry and geometry.lower() == 'true':
+            queryset = queryset.with_geometry()
+        if region_name:
+            queryset = queryset.filter(name__icontains=region_name)
+        return queryset.all()
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Override the default serializer to include geometry if requested.
+        """
+        geometry = self.request.query_params.get('geometry', None)
+        if self.action == 'retrieve' and geometry and geometry.lower() == 'true':
+            kwargs['context'] = {'geometry': True}
+        return super().get_serializer(*args, **kwargs)

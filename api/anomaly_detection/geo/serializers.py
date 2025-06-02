@@ -20,6 +20,18 @@ class MunicipalitySerializer(ModelSerializer):
             return obj.province.name
         return None
 
+    def to_representation(self, instance):
+        """
+        Override to_representation to include the province name.
+        """
+        res = super().to_representation(instance)
+        if not self.context.get('geometry', False):
+            res['geometry'] = None
+        return res
+
     class Meta:
         model = Municipality
-        fields = ['code', 'name', 'alt_name', 'province']
+        fields = ['id', 'code', 'name', 'alt_name', 'province', 'geometry']
+        extra_kwargs = {
+            'geometry': {'allow_null': True}
+        }
