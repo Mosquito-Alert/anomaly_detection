@@ -45,19 +45,10 @@ class MunicipalityRetrieveSerializer(GeoFeatureModelSerializer):
     def get_geometry(self, obj):
         return json.loads(obj.geometry.geojson)
 
-    def to_representation(self, instance):
-        """
-        Override to_representation to include the province name.
-        """
-        res = super().to_representation(instance)
-        if not self.context.get('geometry', False):
-            res['geometry'] = None
-        return res
-
     class Meta:
         model = Municipality
         geo_field = 'geometry'
         fields = ['id', 'code', 'name', 'alt_name', 'province', 'geometry']
         extra_kwargs = {
-            'geometry': {'allow_null': True}
+            'geometry': {'allow_null': True},
         }

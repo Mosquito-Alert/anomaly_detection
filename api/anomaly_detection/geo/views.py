@@ -32,17 +32,6 @@ from anomaly_detection.geo.vector_layers import MunicipalityVectorLayer, Provinc
 
         ]
     ),
-    retrieve=extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='geometry',
-                type=OpenApiTypes.BOOL,
-                description='Geometry.',
-                required=False,
-                default=False
-            ),
-        ]
-    ),
 )
 class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, RetrieveModelMixin):
     """
@@ -83,8 +72,6 @@ class RegionViewSet(BaseVectorTileView, GenericViewSet, ListModelMixin, Retrieve
         """
         Override the default serializer to include geometry if requested.
         """
-        geometry = self.request.query_params.get('geometry', None)
-        if self.action == 'retrieve' and geometry and geometry.lower() == 'true':
-            kwargs['context'] = {'geometry': True}
+        if self.action == 'retrieve':
             return MunicipalityRetrieveSerializer(*args, **kwargs)
         return super().get_serializer(*args, **kwargs)
