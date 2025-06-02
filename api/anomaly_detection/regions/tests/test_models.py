@@ -2,7 +2,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.db import IntegrityError
 import pytest
 
-from anomaly_detection.geo.models import AutonomousCommunity, Country, Municipality, Province
+from anomaly_detection.regions.models import AutonomousCommunity, Country, Municipality, Province
 
 
 @pytest.fixture

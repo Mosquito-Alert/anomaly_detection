@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.db.models import Manager, Prefetch
 
-from anomaly_detection.geo.models import Municipality
+from anomaly_detection.regions.models import Municipality
 
 
 class RegionSelectedManager(Manager):

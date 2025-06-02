@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional, TypedDict
+from typing import List, Optional, TypedDict
 import pandas as pd
 
 from django.contrib.postgres.fields import ArrayField
@@ -13,12 +13,13 @@ from prophet.serialize import model_to_json as prophet_model_to_json
 from rest_framework.fields import MaxValueValidator, MinValueValidator
 
 
-from anomaly_detection.geo.models import Municipality
+from anomaly_detection.regions.models import Municipality
 from anomaly_detection.predictions.managers import PredictorManager, RegionSelectedManager
 from anomaly_detection.predictions.tasks import refresh_prediction_task
 
 
 class PredictionResult(TypedDict):
+    datetime: datetime
     yhat: float
     yhat_upper: float
     yhat_lower: float
@@ -76,7 +77,15 @@ class Predictor(models.Model):
         """
         return self.weights is not None
 
-    def predict(self, date: datetime, value: float) -> Optional[PredictionResult]:
+    @staticmethod
+    def _predict(prophet, df) -> pd.DataFrame:
+        df_new = df.copy()
+        df_new['cap'] = 1
+        df_new['floor'] = 0
+
+        return prophet.predict(df_new)
+
+    def predict(self, dates: List[datetime]) -> Optional[List[PredictionResult]]:
         """
         Predicts the values for the specified data.
         """
@@ -89,12 +98,19 @@ class Predictor(models.Model):
 
         prophet = model_from_json(self.weights)
 
-        df = pd.DataFrame([(date, value)], columns=['ds', 'y'])
-        df['cap'] = 1
-        df['floor'] = 0
-        forecast: PredictionResult = PredictionResult(
-            **prophet.predict(df).iloc[0][['yhat', 'yhat_lower', 'yhat_upper']].to_dict()
-        )
+        # TOOD: if dates is not an array, convert to arary.
+
+        df = pd.DataFrame(dates, columns=['ds',])
+        forecast: PredictionResult = [
+            PredictionResult(**res.to_dict())
+            for res in self._predict(prophet=prophet, df=df)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].rename(
+                columns={'ds': 'datetime'}).to_dict(orient='records')
+        ]
+        # df['cap'] = 1
+        # df['floor'] = 0
+        # forecast: PredictionResult = PredictionResult(
+        #     **prophet.predict(df).iloc[0][['yhat', 'yhat_lower', 'yhat_upper']].to_dict()
+        # )
         return forecast
 
     def train(self, force: bool = False) -> None:

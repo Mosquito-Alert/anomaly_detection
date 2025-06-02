@@ -38,11 +38,15 @@ def refresh_prediction_task(metric_id, refresh_progress=True):
         finally:
             metric.save(update_fields=['predictor'])
 
-    if result := metric.predictor.predict(date=metric.date, value=metric.value):
-        metric.predicted_value = result['yhat']
-        metric.upper_value = result['yhat_upper']
-        metric.lower_value = result['yhat_lower']
-        metric.save()
+    results = metric.predictor.predict(dates=[metric.date,])
+    try:
+        if result := results[0]:
+            metric.predicted_value = result['yhat']
+            metric.upper_value = result['yhat_upper']
+            metric.lower_value = result['yhat_lower']
+            metric.save()
+    except IndexError:
+        pass
 
     if refresh_progress:
         MetricPredictionProgress.refresh(date=metric.date)

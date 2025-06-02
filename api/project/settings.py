@@ -50,7 +50,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'anomaly_detection.utils',
-    'anomaly_detection.geo',
+    'anomaly_detection.regions',
     'anomaly_detection.predictions',
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

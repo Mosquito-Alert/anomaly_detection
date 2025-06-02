@@ -7,9 +7,9 @@ from rest_framework.viewsets import GenericViewSet
 from vectortiles.mixins import BaseVectorTileView
 from vectortiles.rest_framework.renderers import MVTRenderer
 
-from anomaly_detection.geo.models import Municipality
-from anomaly_detection.geo.serializers import MunicipalityRetrieveSerializer, MunicipalitySerializer
-from anomaly_detection.geo.vector_layers import MunicipalityVectorLayer, ProvinceVectorLayer
+from anomaly_detection.regions.models import Municipality
+from anomaly_detection.regions.serializers import MunicipalityRetrieveSerializer, MunicipalitySerializer
+from anomaly_detection.regions.vector_layers import MunicipalityVectorLayer, ProvinceVectorLayer
 
 
 @extend_schema_view(

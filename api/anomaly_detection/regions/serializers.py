@@ -5,7 +5,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from anomaly_detection.geo.models import Municipality
+from anomaly_detection.regions.models import Municipality
 
 
 class MunicipalitySerializer(ModelSerializer):

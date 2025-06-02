@@ -2,7 +2,7 @@
 
 from rest_framework.routers import DefaultRouter
 
-from anomaly_detection.geo import views
+from anomaly_detection.regions import views
 
 router = DefaultRouter()
 

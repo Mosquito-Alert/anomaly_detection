@@ -1,6 +1,6 @@
 import pytest
 
-from anomaly_detection.geo.models import Municipality
+from anomaly_detection.regions.models import Municipality
 from anomaly_detection.predictions.models import Metric, MetricExecution, MetricSeasonality
 
 

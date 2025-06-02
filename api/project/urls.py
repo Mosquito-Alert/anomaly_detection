@@ -35,7 +35,7 @@ urlpatterns = [
     ),
     path(f'{base_url}/docs/redoc/', SpectacularRedocView.as_view(url_name='api-schema'), name='redoc'),
     path(f'{base_url}/', include('anomaly_detection.predictions.urls', namespace='predictions')),
-    path(f'{base_url}/', include('anomaly_detection.geo.urls', namespace='geo')),
+    path(f'{base_url}/', include('anomaly_detection.regions.urls', namespace='regions')),
 ]
 
 

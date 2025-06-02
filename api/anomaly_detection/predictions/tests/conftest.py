@@ -3,8 +3,8 @@ from django.db import reset_queries, connection as db_connection
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
-from anomaly_detection.geo.models import (AutonomousCommunity, Country,
-                                          Municipality, Province)
+from anomaly_detection.regions.models import (AutonomousCommunity, Country,
+                                              Municipality, Province)
 from anomaly_detection.predictions.models import Metric, MetricExecution, MetricSeasonality
 
 

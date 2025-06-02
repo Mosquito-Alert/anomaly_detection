@@ -8,8 +8,8 @@ from django.contrib.gis.utils import LayerMapping
 import geopandas as gpd
 from django.core.management.base import BaseCommand
 
-from anomaly_detection.geo.models import (AutonomousCommunity, Country,
-                                          Municipality, Province)
+from anomaly_detection.regions.models import (AutonomousCommunity, Country,
+                                              Municipality, Province)
 
 
 class Command(BaseCommand):

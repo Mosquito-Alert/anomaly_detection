@@ -7,8 +7,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import (ModelSerializer, Serializer,
                                         SerializerMethodField)
 
-from anomaly_detection.geo.models import Municipality
-from anomaly_detection.geo.serializers import MunicipalitySerializer
+from anomaly_detection.regions.models import Municipality
+from anomaly_detection.regions.serializers import MunicipalitySerializer
 
 from .models import Metric, Predictor
 
