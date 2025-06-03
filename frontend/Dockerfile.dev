@@ -6,6 +6,8 @@ ARG APP_HOME=/usr/app
 
 WORKDIR ${APP_HOME}
 
+RUN apk add --no-cache git
+
 # COPY ./package.json ./
 # RUN npm install
 COPY ./ ./

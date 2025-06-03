@@ -219,7 +219,7 @@ const styleFn = (feature: Feature) => {
   // TODO: Add a gradient to the fill color based on the anomaly degree
   let fillColor;
   const anomaly_degree = feature.get('anomaly_degree');
-  if (anomaly_degree !== 0) {
+  if (anomaly_degree && anomaly_degree !== 0) {
     fillColor = anomaly_degree > 0 ? ANOMALY_COLORS.HIGH : ANOMALY_COLORS.LOW;
   } else {
     fillColor = ANOMALY_COLORS.USUAL_LIGHT + '48'; // with alpha 0.7
