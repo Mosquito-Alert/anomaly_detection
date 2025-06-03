@@ -1,6 +1,8 @@
-from django.db import models
 from django.core.management.base import BaseCommand
 from datetime import datetime, timedelta
+
+from django.db import models
+from tqdm import tqdm
 
 from anomaly_detection.predictions.models import Metric, Predictor
 
@@ -63,31 +65,33 @@ class Command(BaseCommand):
         region = options.get('region')
 
         metric_to_update = []
-        predictor_qs = Predictor.objects.all().filter(
-            metrics__date__gte=from_date,
-            metrics__date__lte=to_date
+        predictor_qs = Predictor.objects.filter(
+            models.Exists(
+                Metric.objects.filter(
+                    predictor=models.OuterRef('pk'),
+                    date__gte=from_date,
+                    date__lte=to_date
+                )
+            )
         )
         if region:
-            predictor_qs = predictor_qs.filter(region__code=region),
+            predictor_qs = predictor_qs.filter(region__code=region)
 
-        for predictor in predictor_qs.prefetch_related(
-            'metrics',
-            models.Prefetch('metrics', queryset=Metric.objects.filter(date__between=[from_date, to_date]))
-        ).iterator():
+        for predictor in tqdm(predictor_qs.iterator(chunk_size=1000), total=predictor_qs.count()):
             date_to_pk = {
                 metric.date: metric
-                for metric in predictor.metrics
+                for metric in predictor.metrics.filter(date__gte=from_date, date__lte=to_date).iterator(chunk_size=1000)
             }
 
             for result in predictor.predict(dates=list(generate_date_range(from_date, to_date))):
-                if metric := date_to_pk.get(result['datetime'], None):
+                if metric := date_to_pk.get(result['datetime'].date(), None):
                     metric.predicted_value = result['yhat']
                     metric.upper_value = result['yhat_upper']
                     metric.lower_value = result['yhat_lower']
                     metric_to_update.append(metric)
 
-        Metric.bulk_update(
-            metric_to_update,
-            batch_size=2000,
-            fields=['predicted_value', 'upper_value', 'lower_value']
-        )
+            Metric.objects.bulk_update(
+                metric_to_update,
+                batch_size=2000,
+                fields=['predicted_value', 'upper_value', 'lower_value']
+            )
