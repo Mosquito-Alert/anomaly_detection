@@ -20,7 +20,7 @@ from drf_spectacular.views import (SpectacularAPIView, SpectacularJSONAPIView,
                                    SpectacularRedocView,
                                    SpectacularSwaggerView)
 
-from project import settings
+from django.conf import settings
 
 base_url = "api/v1"
 

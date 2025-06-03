@@ -5,6 +5,7 @@ from .base import *  # noqa
 # * GENERAL
 # ------------------------------------------------------------------------------
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "labs.mosquitoalert.com").split(",")  # noqa: F405
+DEBUG = False
 
 
 # * API Settings

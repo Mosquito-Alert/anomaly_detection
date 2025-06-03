@@ -78,8 +78,8 @@ DATABASES = {
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         'NAME': os.environ.get('POSTGRES_DB', 'anomaly_detection'),
-        'USER': os.environ.get('POSTGRES_USER', 'anomaly_detection_user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'insecure_password_for_local_development'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
     }
 }
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
