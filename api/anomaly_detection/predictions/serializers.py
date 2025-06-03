@@ -1,6 +1,7 @@
-from datetime import datetime
+import math
 import re
-import numpy as np
+from datetime import datetime
+
 import pandas as pd
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -134,7 +135,7 @@ class MetricFileSerializer(Serializer):
                 Metric(
                     region_id=region_code_to_id[row['code']],
                     date=date,
-                    value=row['est'] if not row['est'] == np.nan else None,
+                    value=row['est'] if not math.isnan(row['est'].iloc[0]) else None,
                 )
             )
 

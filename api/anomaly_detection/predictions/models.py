@@ -1,4 +1,5 @@
 import uuid
+import math
 from datetime import datetime
 from typing import List, Optional, TypedDict
 import pandas as pd
@@ -98,11 +99,13 @@ class Predictor(models.Model):
 
         prophet = model_from_json(self.weights)
 
-        # TOOD: if dates is not an array, convert to arary.
+        # If dates is not an array, convert to arary.
+        if not isinstance(dates, list):
+            dates = [dates, ]
 
         df = pd.DataFrame(dates, columns=['ds',])
         forecast: PredictionResult = [
-            PredictionResult(**res.to_dict())
+            PredictionResult(**res)
             for res in self._predict(prophet=prophet, df=df)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].rename(
                 columns={'ds': 'datetime'}).to_dict(orient='records')
         ]
@@ -301,6 +304,9 @@ class Metric(models.Model):
 
     def save(self, *args, **kwargs):
         is_adding = self._state.adding  # A new object is being created
+
+        if self.value is not None and math.isnan(self.value):
+            self.value = None
 
         # Save the initial Metric with the prediction values and the predictor to None.
         super().save(*args, **kwargs)
