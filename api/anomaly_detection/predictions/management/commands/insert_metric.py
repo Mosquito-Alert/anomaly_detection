@@ -9,7 +9,7 @@ import pandas as pd
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from anomaly_detection.predictions.models import Metric, MetricSeasonality
-from anomaly_detection.geo.models import Municipality
+from anomaly_detection.regions.models import Municipality
 
 
 class Command(BaseCommand):
