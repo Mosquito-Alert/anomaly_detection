@@ -1,0 +1,84 @@
+services:
+  db:
+    image: postgis/postgis:15-3.5
+    container_name: anomaly-detection-db
+    hostname: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - anomaly-detection-db_data:/var/lib/postgresql/data
+      - anomaly-detection-db_data_backups:/backups
+    env_file:
+      - ./api/.envs/.production/.postgres.env
+    # command: "-c log_statement=all"
+
+  broker:
+    image: rabbitmq:4.1.0-management
+    container_name: anomaly-detection-broker
+    volumes:
+      - anomaly-detection-broker:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api: &api
+    build:
+      context: ./api
+      args:
+        - DEV=false
+    image: mosquito-alert/anomaly-detection-api
+    container_name: anomaly-detection-api
+    hostname: api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api/.envs/.production/.django.env
+      - ./api/.envs/.production/.postgres.env
+    healthcheck:
+      test: "curl -f http://localhost:8000/ping/ || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - db
+      - broker
+
+  worker:
+    <<: *api
+    container_name: anomaly-detection-worker
+    hostname: worker
+    ports: []
+    command: /scripts/start_worker
+
+
+  worker_flower:
+    <<: *api
+    container_name: anomaly-detection-flower
+    hostname: flower
+    ports:
+      - "5555:5555"
+    command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: mosquito-alert/anomaly-detection-frontend
+    container_name: anomaly-detection-frontend
+    hostname: frontend
+    ports:
+      - "9000:80"
+    environment:
+      - VUE_APP_API_URL=http://api.mosquitoalert.com:8000/api/v1
+      - VUE_APP_API_VERSION=v1
+    depends_on:
+      - api
+
+volumes:
+  anomaly-detection-db_data:
+  anomaly-detection-db_data_backups:
+  anomaly-detection-broker:
+    driver: local
+
+

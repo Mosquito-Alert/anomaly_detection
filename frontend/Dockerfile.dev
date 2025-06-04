@@ -1,0 +1,17 @@
+FROM node:lts-alpine
+
+# USER node
+
+ARG APP_HOME=/usr/app
+
+WORKDIR ${APP_HOME}
+
+RUN apk add --no-cache git
+
+# COPY ./package.json ./
+# RUN npm install
+COPY ./ ./
+RUN npm i -g @quasar/cli
+RUN npm i
+
+CMD ["npm", "run", "dev"]

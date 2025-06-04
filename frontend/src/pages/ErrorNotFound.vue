@@ -22,8 +22,6 @@
   </div>
 </template>
 
-<script setup>
-defineOptions({
-  name: 'ErrorNotFound'
-});
+<script setup lang="ts">
+//
 </script>
