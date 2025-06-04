@@ -30,21 +30,18 @@ from anomaly_detection.predictions.vector_layers import \
                 type=OpenApiTypes.DATE,
                 description='Starting date from which the results will return.',
                 required=False,
-                default=datetime.today().strftime('%Y-%m-%d')
             ),
             OpenApiParameter(
                 name='date_to',
                 type=OpenApiTypes.DATE,
                 description='Ending date which to the results will return.',
                 required=False,
-                default=datetime.today().strftime('%Y-%m-%d')
             ),
             OpenApiParameter(
                 name='region_code',
                 type=OpenApiTypes.STR,
                 description='Determines the region of the results (history).',
                 required=False,
-                default='ESP.1.1.1.1_1'
             ),
             OpenApiParameter(
                 name='ordering',
@@ -62,7 +59,6 @@ from anomaly_detection.predictions.vector_layers import \
                 type=OpenApiTypes.DATE,
                 description='Date of the results to return.',
                 required=True,
-                default=datetime.today().strftime('%Y-%m-%d')
             ),
         ],
     ),

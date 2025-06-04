@@ -1,8 +1,3 @@
-"""
-Django command to prepare that load, transforms and saves the geographical data into the database.
-
-The input data is the GADM data for the entire world.
-"""
 import os
 from django.contrib.gis.utils import LayerMapping
 import geopandas as gpd
