@@ -8,9 +8,7 @@ import Components from 'unplugin-vue-components/vite';
 
 export default defineConfig((ctx) => {
   const isDev = ctx.dev;
-  const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8000';
-  const API_VERSION = process.env.VUE_APP_API_VERSION || 'v1';
-  const API_BASE_URL = `${API_URL}/api/${API_VERSION}/`;
+  console.log(ctx);
 
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -42,7 +40,7 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
       env: {
-        API_BASE_URL,
+        API_BASE_URL: isDev ? '/api' : 'http://api.mosquitoalert.com:8000/api/v1',
       },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
@@ -62,7 +60,8 @@ export default defineConfig((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      publicPath: process.env.NODE_ENV === 'production' ? '/anomaly_detection/' : '/',
+      // publicPath: process.env.NODE_ENV === 'production' ? '/anomaly_detection/' : '/',
+      publicPath: '/',
       // analyze: true,
       // env: {},
       // rawDefine: {}
@@ -140,7 +139,7 @@ export default defineConfig((ctx) => {
       ...(isDev && {
         proxy: {
           '/api': {
-            target: API_BASE_URL,
+            target: 'http://api:8000/api/v1/',
             changeOrigin: true,
             secure: false,
             rewrite: (path) => path.replace(/^\/api/, ''),

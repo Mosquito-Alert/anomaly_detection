@@ -4,7 +4,7 @@ FROM node:lts-alpine AS build-stage
 
 WORKDIR /app
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git curl
 
 COPY . .
 RUN npm install
@@ -19,6 +19,5 @@ HEALTHCHECK --interval=30s --retries=3 --timeout=5s CMD curl --fail http://local
 EXPOSE 80
 
 WORKDIR /app
-COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build-stage /app/dist/spa /app
-# /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
