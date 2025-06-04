@@ -147,6 +147,7 @@ env.bak/
 venv.bak/
 !./api/.envs/.production/.gitkeep
 !.api/.envs/.local
+api/static
 
 # Spyder project settings
 .spyderproject

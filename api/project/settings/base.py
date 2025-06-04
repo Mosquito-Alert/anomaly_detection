@@ -142,6 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / '../static'
 
 
 # For django-hsots
