@@ -39,7 +39,7 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
       env: {
-        API_BASE_URL: isDev ? '/api' : 'http://api.mosquitoalert.com:8000/api/v1',
+        API_BASE_URL: isDev ? '/api' : undefined,
       },
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
