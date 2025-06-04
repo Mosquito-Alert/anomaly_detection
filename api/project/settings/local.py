@@ -5,9 +5,7 @@ import os
 
 # * GENERAL
 # ------------------------------------------------------------------------------
-# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8000', 'http://localhost:8000', 'http://localhost']
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
 # * DATABASES
 # ------------------------------------------------------------------------------
@@ -21,3 +19,10 @@ DATABASES['default']['PASSWORD'] = os.environ.get(
 # * Silk
 INSTALLED_APPS += ["silk"]  # noqa: F405
 MIDDLEWARE = ['silk.middleware.SilkyMiddleware'] + MIDDLEWARE  # noqa: F405
+
+# * CORS & HOSTS
+# ------------------------------------------------------------------------------
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:8000,https://localhost:8000"
+).split(",")

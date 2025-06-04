@@ -44,6 +44,8 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'django_filters',
+    'django_hosts',
+    "corsheaders",
 ]
 
 LOCAL_APPS = [
@@ -59,6 +61,9 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
+    'lb_health_check.middleware.AliveCheck',
+    'django_hosts.middleware.HostsRequestMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_hosts.middleware.HostsResponseMiddleware'
 ]
 
 
@@ -138,6 +144,11 @@ AUTH_PASSWORD_VALIDATORS = [
 STATIC_URL = 'static/'
 
 
+# For django-hsots
+ROOT_HOSTCONF = 'project.hosts'
+DEFAULT_HOST = 'api'
+
+
 # * API Settings
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
@@ -181,3 +192,6 @@ SPECTACULAR_SETTINGS = {
     'ENUM_GENERATE_CHOICE_DESCRIPTION': False,
     'COMPONENT_SPLIT_REQUEST': True,
 }
+
+# django-lb-health-check settings
+ALIVENESS_URL = "/ping/"

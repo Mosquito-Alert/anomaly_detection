@@ -51,10 +51,18 @@ LOGGING = {
     },
 }
 
+# * CORS & HOSTS
+# ------------------------------------------------------------------------------
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "https://labs.mosquitoalert.com"
+).split(",")
+
+
 # * API Settings
 # -------------------------------------------------------------------------------
 
 # Spectacular settings
 SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa: F405
-    {"url": "https://api.mosquitoalert.com/v1/anomaly_detection", "description": "Production server"}
+    {"url": "https://metrics.mosquitoalert.com/api/v1", "description": "Production server"}
 ]

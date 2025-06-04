@@ -23,8 +23,8 @@ WORKDIR ${APP_HOME}
 RUN apt-get update && apt-get install --no-install-recommends -y \
     # dependencies for building Python packages
     build-essential \
-    # TODO: Needed for docker healthcheck
-    # curl \
+    # Needed for docker healthcheck
+    curl \
     # psycopg2 dependencies
     libpq-dev \
     # TODO: Translations dependencies
