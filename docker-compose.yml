@@ -26,6 +26,8 @@ services:
     hostname: api
     ports:
       - "8000:5000"
+    volumes:
+      - ./api/static:/usr/app/static
     env_file:
       - ./api/.envs/.production/.django.env
       - ./api/.envs/.production/.postgres.env
