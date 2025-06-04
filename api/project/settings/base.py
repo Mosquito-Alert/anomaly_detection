@@ -44,7 +44,7 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'django_filters',
-    'django_hosts',
+    # 'django_hosts',
     "corsheaders",
 ]
 
@@ -145,9 +145,9 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / '../static'
 
 
-# For django-hsots
-ROOT_HOSTCONF = 'project.hosts'
-DEFAULT_HOST = 'api'
+# # For django-hsots
+# ROOT_HOSTCONF = 'project.hosts'
+# DEFAULT_HOST = 'api'
 
 
 # * API Settings
