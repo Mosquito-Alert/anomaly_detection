@@ -12,6 +12,7 @@ on:
       - 'v*'
     paths:
       - 'frontend/**'
+      - '.github/workflows/publish-frontend-image.yml'
 
 # Defines two custom environment variables for the workflow.
 # These are used for the Container registry domain, and a
@@ -22,7 +23,7 @@ env:
 
 jobs:
   build-and-push-image:
-    name: Build and push Docker image
+    name: Build and push Frontend Docker image
     runs-on: ubuntu-latest
 #     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
