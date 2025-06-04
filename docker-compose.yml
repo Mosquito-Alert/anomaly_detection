@@ -15,7 +15,8 @@ services:
   broker:
     image: rabbitmq:4.1.0-management
     container_name: anomaly-detection-broker
-    # TODO: Volume
+    volumes:
+      - anomaly-detection-broker:/var/lib/rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -77,4 +78,7 @@ services:
 volumes:
   anomaly-detection-db_data:
   anomaly-detection-db_data_backups:
+  anomaly-detection-broker:
+    driver: local
+
 
