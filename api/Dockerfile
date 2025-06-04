@@ -47,4 +47,4 @@ ENV PATH="/scripts:/py/bin:$PATH"
 
 USER django-user
 
-CMD ["start"]
+CMD ["start_prod"]

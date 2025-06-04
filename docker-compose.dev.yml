@@ -43,6 +43,7 @@ services:
     depends_on:
       - db
       - broker
+    command: /scripts/start
 
   worker:
     <<: *api
