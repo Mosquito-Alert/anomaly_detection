@@ -6,8 +6,6 @@ const configuration = new Configuration({
 // const configuration = new Configuration({
 //   ...(process.env.API_BASE_URL ? { basePath: process.env.API_BASE_URL } : {}),
 // });
-console.log(configuration);
-console.log(process.env);
 
 export const metricsApi = new MetricsApi(configuration);
 export const regionsApi = new RegionsApi(configuration);

@@ -3,8 +3,6 @@ services:
     image: postgis/postgis:15-3.5
     container_name: anomaly-detection-db
     hostname: db
-    ports:
-      - "5432:5432"
     volumes:
       - anomaly-detection-db_data:/var/lib/postgresql/data
       - anomaly-detection-db_data_backups:/backups
@@ -17,9 +15,6 @@ services:
     container_name: anomaly-detection-broker
     volumes:
       - anomaly-detection-broker:/var/lib/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
 
   api: &api
     build:

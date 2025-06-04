@@ -8,7 +8,6 @@ import Components from 'unplugin-vue-components/vite';
 
 export default defineConfig((ctx) => {
   const isDev = ctx.dev;
-  console.log(ctx);
 
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
