@@ -18,7 +18,6 @@
 
       <ol-tile-layer>
         <ol-source-xyz
-          ref="sourceRef"
           :url="basemapLayer.url"
           :preload="basemapLayer.preload"
           :attributions-collapsible="basemapLayer.attributionsCollapsible"
@@ -38,15 +37,23 @@
         <ol-style :overrideStyleFunction="styleFn"></ol-style>
       </ol-vector-tile-layer>
 
-      <ol-vector-layer :z-index="9" render-mode="vector">
-        <ol-source-vector :features="hoveredFeatures" />
+      <ol-vector-tile-layer
+        ref="hoverLayerRef"
+        :z-index="9"
+        render-mode="vector"
+        :source="sourceRef?.source"
+      >
         <ol-style :overrideStyleFunction="hoveredStyleFn"></ol-style>
-      </ol-vector-layer>
+      </ol-vector-tile-layer>
 
-      <ol-vector-layer :z-index="10" render-mode="vector">
-        <ol-source-vector :features="mapStore.selectedFeatures" />
+      <ol-vector-tile-layer
+        ref="selectedLayerRef"
+        :z-index="10"
+        render-mode="vector"
+        :source="sourceRef?.source"
+      >
         <ol-style :overrideStyleFunction="selectedStyleFn"></ol-style>
-      </ol-vector-layer>
+      </ol-vector-tile-layer>
 
       <ol-tile-layer :z-index="15">
         <ol-source-xyz
@@ -69,11 +76,12 @@ import { Fill, Stroke, Style } from 'ol/style';
 import type MapRef from 'ol/Map';
 import { getCssVar, useQuasar } from 'quasar';
 import { ANOMALY_COLORS } from 'src/constants/colors';
-import { computed, inject, onMounted, ref, watchEffect } from 'vue';
+import { computed, inject, onMounted, ref, watch, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
 import { useMapStore } from 'src/stores/mapStore';
 import { FeatureLike } from 'ol/Feature';
 import { Geometry } from 'ol/geom';
+import VectorTileLayer from 'ol/layer/VectorTile';
 
 const props = defineProps({
   date: {
@@ -87,18 +95,10 @@ const hoveredFeatures = ref([] as FeatureLike[]);
 
 const mapRef = ref<{ map: MapRef } | null>(null);
 const viewRef = ref();
-const sourceRef = ref(null);
+const sourceRef = ref();
 const layerRef = ref(null);
-
-onMounted(() => {
-  const map = mapRef.value?.map;
-  if (!map) {
-    return;
-  }
-  // map.addOverlay(hoverTooltip);
-
-  map.addOverlay(hoverOverlay);
-});
+const hoverLayerRef = ref<{ vectorTileLayer: VectorTileLayer } | null>(null);
+const selectedLayerRef = ref<{ vectorTileLayer: VectorTileLayer } | null>(null);
 
 const $q = useQuasar();
 
@@ -138,6 +138,18 @@ const handleSourceTileLoadStart = () => {
 const handleSourceTileLoadEnd = () => {
   $q.loading.hide();
 };
+
+onMounted(() => {
+  const map = mapRef.value?.map;
+  if (!map) {
+    return;
+  }
+
+  map.addOverlay(hoverOverlay);
+  if (!layerRef) {
+    return;
+  }
+});
 
 /**
  * Select and hover features
@@ -193,6 +205,7 @@ const hoverFeature = async (event: MapBrowserEvent<PointerEvent>) => {
     return;
   }
   hoveredFeatures.value = features as Feature[];
+
   const feature = features[0] as FeatureLike;
   tooltipEl.innerHTML = feature.get('region__name');
   tooltipEl.classList.add('visible');
@@ -210,6 +223,14 @@ watchEffect(() => {
     });
   }
   // # TODO: Zoom out if selected feature is cleared
+});
+
+watch(hoveredFeatures, () => {
+  hoverLayerRef.value?.vectorTileLayer.changed();
+});
+
+watch(mapStore.selectedFeatures, () => {
+  selectedLayerRef.value?.vectorTileLayer.changed();
 });
 
 /**
@@ -233,12 +254,22 @@ const styleFn = (feature: Feature) => {
 };
 
 const selectedStyleFn = (feature: any) => {
-  const style = hoveredStyleFn(feature);
-  (style.getStroke() as Stroke).setWidth(4);
+  const selectedFeaturesIds = mapStore.selectedFeatures.map((f) => f.getId());
+  if (!selectedFeaturesIds.includes(feature.getId())) return;
+
+  const style = styleFn(feature);
+  style.setStroke(
+    new Stroke({
+      color: getCssVar('accent') || '#FF0000',
+      width: 4,
+    }),
+  );
   return style;
 };
 
 const hoveredStyleFn = (feature: any) => {
+  const hoveredFeaturesIds = hoveredFeatures.value.map((f) => f.getId());
+  if (!hoveredFeaturesIds.includes(feature.getId())) return;
   const style = styleFn(feature);
 
   style.setStroke(
