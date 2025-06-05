@@ -36,7 +36,7 @@ class Command(BaseCommand):
         # Loop through the files
         for file in files:
             try:
-                date = file.split("bites_")[1].split(".")[0]
+                date = file.split("/")[-1].split("bites_")[1].split(".")[0]
                 df_day = pd.read_csv(file)
                 df_day["date"] = date
                 dfs.append(df_day)
