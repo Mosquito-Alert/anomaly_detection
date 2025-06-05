@@ -18,7 +18,7 @@ services:
       - anomaly-detection-broker:/var/lib/rabbitmq
 
   backend_api: &api
-    image:  ghcr.io/mosquito-alert/anomaly_detection-api:0.1.1
+    image:  ghcr.io/mosquito-alert/anomaly_detection-api:0.1.2
     container_name: anomaly-detection-api
     hostname: api
     ports:
@@ -59,7 +59,7 @@ services:
       disable: true
 
   frontend:
-    image: ghcr.io/mosquito-alert/anomaly_detection-frontend:0.1.1
+    image: ghcr.io/mosquito-alert/anomaly_detection-frontend:0.1.2
     container_name: anomaly-detection-frontend
     hostname: frontend
     ports:
