@@ -1,3 +1,4 @@
+import math
 import os
 
 import pandas as pd
@@ -85,7 +86,7 @@ class Command(BaseCommand):
                 metrics_to_create.append(Metric(
                     region=region,
                     date=row['date'],
-                    value=row['est'],
+                    value=row['est'] if not math.isnan(row['est'].iloc[0]) else None,
                 ))
             except Exception as e:
                 print(f"Error creating Metric for row {row}: {e}")

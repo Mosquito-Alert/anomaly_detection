@@ -16,7 +16,7 @@ class RegionSelectedManager(Manager):
         These are useful for performance reasons (one query and not retrieving the geometry field
         by default).
         """
-        return super().get_queryset().select_related('region').defer('region__geometry', 'predictor')
+        return super().get_queryset().select_related('region').defer('region__geometry')
 
     def with_geometry(self):
         """

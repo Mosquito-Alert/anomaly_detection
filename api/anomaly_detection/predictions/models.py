@@ -109,11 +109,6 @@ class Predictor(models.Model):
             for res in self._predict(prophet=prophet, df=df)[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].rename(
                 columns={'ds': 'datetime'}).to_dict(orient='records')
         ]
-        # df['cap'] = 1
-        # df['floor'] = 0
-        # forecast: PredictionResult = PredictionResult(
-        #     **prophet.predict(df).iloc[0][['yhat', 'yhat_lower', 'yhat_upper']].to_dict()
-        # )
         return forecast
 
     def train(self, force: bool = False) -> None:

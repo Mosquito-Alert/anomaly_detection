@@ -1,31 +1,8 @@
 from django.core.management.base import BaseCommand
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from django.db import models
-from tqdm import tqdm
-
-from anomaly_detection.predictions.models import Metric, Predictor
-
-
-def generate_date_range(start_str, end_str, fmt='%Y-%m-%d'):
-    """
-    Generate dates between start_str and end_str (inclusive).
-
-    Args:
-        start_str (str): The start date as a string.
-        end_str (str): The end date as a string.
-        fmt (str): The date format (default '%Y-%m-%d').
-
-    Yields:
-        datetime.date: The dates in the range.
-    """
-    start_date = datetime.strptime(start_str, fmt).date()
-    end_date = datetime.strptime(end_str, fmt).date()
-
-    current_date = start_date
-    while current_date <= end_date:
-        yield current_date
-        current_date += timedelta(days=1)
+from anomaly_detection.regions.models import Municipality
+from anomaly_detection.predictions.tasks import predict_batch_task
 
 
 class Command(BaseCommand):
@@ -51,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--to-date',
             type=str,
-            default="2100-01-01",
+            default=datetime.now().strftime('%Y-%m-%d'),
             help='End date for filtering metrics (format: YYYY-MM-DD)'
         )
 
@@ -64,34 +41,9 @@ class Command(BaseCommand):
         to_date = options.get('to_date')
         region = options.get('region')
 
-        metric_to_update = []
-        predictor_qs = Predictor.objects.filter(
-            models.Exists(
-                Metric.objects.filter(
-                    predictor=models.OuterRef('pk'),
-                    date__gte=from_date,
-                    date__lte=to_date
-                )
-            )
-        )
+        region_qs = Municipality.objects.all()
         if region:
-            predictor_qs = predictor_qs.filter(region__code=region)
+            region_qs = region_qs.filter(code=region)
 
-        for predictor in tqdm(predictor_qs.iterator(chunk_size=1000), total=predictor_qs.count()):
-            date_to_pk = {
-                metric.date: metric
-                for metric in predictor.metrics.filter(date__gte=from_date, date__lte=to_date).iterator(chunk_size=1000)
-            }
-
-            for result in predictor.predict(dates=list(generate_date_range(from_date, to_date))):
-                if metric := date_to_pk.get(result['datetime'].date(), None):
-                    metric.predicted_value = result['yhat']
-                    metric.upper_value = result['yhat_upper']
-                    metric.lower_value = result['yhat_lower']
-                    metric_to_update.append(metric)
-
-            Metric.objects.bulk_update(
-                metric_to_update,
-                batch_size=2000,
-                fields=['predicted_value', 'upper_value', 'lower_value']
-            )
+        for region in region_qs.iterator(chunk_size=1000):
+            predict_batch_task.delay(from_date=from_date, to_date=to_date, region_id=region.id)
