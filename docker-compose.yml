@@ -1,6 +1,7 @@
 services:
   db:
     image: postgis/postgis:15-3.5
+    profiles: ["data"]
     container_name: anomaly-detection-db
     hostname: db
     volumes:
@@ -12,12 +13,14 @@ services:
 
   broker:
     image: rabbitmq:4.1.0-management
+    profiles: ["data"]
     container_name: anomaly-detection-broker
     volumes:
       - anomaly-detection-broker:/var/lib/rabbitmq
 
   api: &api
     image:  ghcr.io/mosquito-alert/anomaly_detection-api
+    profiles: ["backend"]
     container_name: anomaly-detection-api
     hostname: api
     ports:
@@ -39,6 +42,7 @@ services:
 
   worker:
     <<: *api
+    profiles: ["backend"]
     container_name: anomaly-detection-worker
     hostname: worker
     ports: []
@@ -47,6 +51,7 @@ services:
 
   worker_flower:
     <<: *api
+    profiles: ["backend"]
     container_name: anomaly-detection-flower
     hostname: flower
     ports:
@@ -55,6 +60,7 @@ services:
 
   frontend:
     image: ghcr.io/mosquito-alert/anomaly_detection-frontend
+    profiles: ["frontend"]
     container_name: anomaly-detection-frontend
     hostname: frontend
     ports:
