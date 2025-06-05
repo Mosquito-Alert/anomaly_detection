@@ -1,7 +1,6 @@
 services:
-  db:
+  data_db:
     image: postgis/postgis:15-3.5
-    profiles: ["data"]
     container_name: anomaly-detection-db
     hostname: db
     volumes:
@@ -11,16 +10,14 @@ services:
       - ./api/.envs/.production/.postgres.env
     # command: "-c log_statement=all"
 
-  broker:
+  data_broker:
     image: rabbitmq:4.1.0-management
-    profiles: ["data"]
     container_name: anomaly-detection-broker
     volumes:
       - anomaly-detection-broker:/var/lib/rabbitmq
 
-  api: &api
+  backend_api: &api
     image:  ghcr.io/mosquito-alert/anomaly_detection-api:0.1.0
-    profiles: ["backend"]
     container_name: anomaly-detection-api
     hostname: api
     ports:
@@ -37,21 +34,19 @@ services:
       retries: 3
       start_period: 10s
     depends_on:
-      - db
-      - broker
+      - data_db
+      - data_broker
 
-  worker:
+  backend_worker:
     <<: *api
-    profiles: ["backend"]
     container_name: anomaly-detection-worker
     hostname: worker
     ports: []
     command: /scripts/start_worker
 
 
-  worker_flower:
+  backend_worker_flower:
     <<: *api
-    profiles: ["backend"]
     container_name: anomaly-detection-flower
     hostname: flower
     ports:
@@ -60,7 +55,6 @@ services:
 
   frontend:
     image: ghcr.io/mosquito-alert/anomaly_detection-frontend:0.1.0
-    profiles: ["frontend"]
     container_name: anomaly-detection-frontend
     hostname: frontend
     ports:
@@ -69,7 +63,7 @@ services:
       - VUE_APP_API_URL=https://metrics.mosquitoalert.com/api
       - VUE_APP_API_VERSION=v1
     depends_on:
-      - api
+      - backend_api
 
 volumes:
   anomaly-detection-db_data:
