@@ -39,6 +39,8 @@ def refresh_prediction_task(metric_id, refresh_progress=True):
             metric.save(update_fields=['predictor'])
 
     results = metric.predictor.predict(dates=[metric.date,])
+    if not results:
+        return
     try:
         if result := results[0]:
             metric.predicted_value = result['yhat']
