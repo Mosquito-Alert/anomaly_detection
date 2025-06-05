@@ -54,7 +54,7 @@ services:
     hostname: flower
     ports:
       - "5555:5555"
-    command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
+    command: /scripts/start_flower
     healthcheck:
       disable: true
 
