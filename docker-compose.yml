@@ -43,6 +43,8 @@ services:
     hostname: worker
     ports: []
     command: /scripts/start_worker
+    healthcheck:
+      test: "/entrypoint celery inspect ping -d celery@$$HOSTNAME"
 
 
   backend_worker_flower:
@@ -51,7 +53,9 @@ services:
     hostname: flower
     ports:
       - "5555:5555"
-    command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
+    command: /start-flower
+    healthcheck:
+      disable: true
 
   frontend:
     image: ghcr.io/mosquito-alert/anomaly_detection-frontend:0.1.0
