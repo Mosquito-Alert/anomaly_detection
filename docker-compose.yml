@@ -19,7 +19,7 @@ services:
       - anomaly-detection-broker:/var/lib/rabbitmq
 
   api: &api
-    image:  ghcr.io/mosquito-alert/anomaly_detection-api
+    image:  ghcr.io/mosquito-alert/anomaly_detection-api:0.1.0
     profiles: ["backend"]
     container_name: anomaly-detection-api
     hostname: api
@@ -59,7 +59,7 @@ services:
     command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
 
   frontend:
-    image: ghcr.io/mosquito-alert/anomaly_detection-frontend
+    image: ghcr.io/mosquito-alert/anomaly_detection-frontend:0.1.0
     profiles: ["frontend"]
     container_name: anomaly-detection-frontend
     hostname: frontend
