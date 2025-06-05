@@ -76,7 +76,7 @@ import { Fill, Stroke, Style } from 'ol/style';
 import type MapRef from 'ol/Map';
 import { getCssVar, useQuasar } from 'quasar';
 import { ANOMALY_COLORS } from 'src/constants/colors';
-import { computed, inject, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, inject, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { Layer } from 'ol/layer';
 import { useMapStore } from 'src/stores/mapStore';
 import { FeatureLike } from 'ol/Feature';
@@ -107,7 +107,7 @@ const $q = useQuasar();
  */
 const projection = ref('EPSG:3857');
 const center = ref(fromLonLat([-3.6, 40.0], projection.value));
-const zoom = ref(7);
+const zoom = ref(6.8);
 const maxZoom = ref(17);
 
 // * Map layers
@@ -149,6 +149,17 @@ onMounted(() => {
   if (!layerRef) {
     return;
   }
+});
+
+onUnmounted(() => {
+  const map = mapRef.value?.map;
+  if (!map) {
+    return;
+  }
+  map.removeOverlay(hoverOverlay);
+
+  // .clear();
+  mapStore.selectedFeatures = [];
 });
 
 /**
@@ -221,8 +232,13 @@ watchEffect(() => {
       padding: [250, 250, 250, 250], //Padding around the feature
       duration: 600, // duration of the zoom animation in milliseconds
     });
+  } else if (viewRef.value && !mapStore.isRegionSelected) {
+    viewRef.value.view.animate({
+      center: center.value,
+      zoom: zoom.value,
+      duration: 600, // duration of the zoom animation in milliseconds
+    });
   }
-  // # TODO: Zoom out if selected feature is cleared
 });
 
 watch(hoveredFeatures, () => {
