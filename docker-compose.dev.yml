@@ -10,11 +10,17 @@ services:
       - anomaly-detection-local-db_data_backups:/backups
     env_file:
       - ./api/.envs/.local/.postgres.env
-    command: "-c log_statement=all"
+    # command: "-c log_statement=all"
 
   broker:
     image: rabbitmq:4.1.0-management
     container_name: anomaly-detection-local-broker
+    hostname: broker
+    configs:
+      - source: plugins
+        target: /etc/rabbitmq/enabled_plugins
+    env_file:
+      - ./api/.envs/.local/.django.env
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -59,7 +65,7 @@ services:
     hostname: flower
     ports:
       - "5556:5555"
-    command: sh -c "celery -A project flower --basic_auth=$$CELERY_FLOWER_USER:$$CELERY_FLOWER_PASSWORD"
+    command: /scripts/start_flower
 
   frontend:
     build:
@@ -83,3 +89,6 @@ volumes:
   anomaly-detection-local-db_data:
   anomaly-detection-local-db_data_backups:
 
+configs:
+  plugins:
+    content: "[rabbitmq_federation_management,rabbitmq_management,rabbitmq_mqtt,rabbitmq_stomp]."
