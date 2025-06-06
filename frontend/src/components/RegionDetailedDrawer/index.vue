@@ -1,5 +1,11 @@
 <template>
-  <q-drawer show-if-above side="left" :width="width" class="bg-white overflow-hidden column">
+  <q-drawer
+    show-if-above
+    side="left"
+    :width="width"
+    v-model="mapStore.isRegionSelected"
+    class="bg-white overflow-hidden column"
+  >
     <div class="drawer-header q-pt-lg q-pb-sm q-px-lg q-ma-none" style="background-color: #f9e7b5">
       <q-btn
         dense
