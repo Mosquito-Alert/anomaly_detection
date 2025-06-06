@@ -127,7 +127,7 @@ const format = inject('ol-format');
 const MVTFormat = new format.MVT({ idProperty: 'id' });
 const anomalyLayer = computed(() => {
   return {
-    url: `/api/metrics/tiles/{z}/{x}/{y}/?date=${props.date}`,
+    url: `https://metrics.mosquitoalert.com/api/v1/metrics/tiles/{z}/{x}/{y}/?date=${props.date}`,
     format: MVTFormat,
   };
 });
