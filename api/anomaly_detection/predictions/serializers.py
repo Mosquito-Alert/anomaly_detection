@@ -135,7 +135,7 @@ class MetricFileSerializer(Serializer):
                 Metric(
                     region_id=region_code_to_id[row['code']],
                     date=date,
-                    value=row['est'] if not math.isnan(row['est'].iloc[0]) else None,
+                    value=row['est'] if not math.isnan(row['est']) else None,
                 )
             )
 
