@@ -4,6 +4,7 @@ from celery import shared_task
 from django.db import IntegrityError, transaction, models
 from django.utils import timezone
 from anomaly_detection.utils.datetime import generate_date_range
+from anomaly_detection.predictions.models import MetricPredictionProgress
 
 
 @shared_task
@@ -63,14 +64,14 @@ def predict_batch_task(from_date, to_date, region_id=None):
     from anomaly_detection.predictions.models import Metric, Predictor
 
     predictor_qs = Predictor.objects.filter(
-            models.Exists(
-                Metric.objects.filter(
-                    predictor=models.OuterRef('pk'),
-                    date__gte=from_date,
-                    date__lte=to_date
-                )
+        models.Exists(
+            Metric.objects.filter(
+                predictor=models.OuterRef('pk'),
+                date__gte=from_date,
+                date__lte=to_date
             )
         )
+    )
     if region_id:
         predictor_qs = predictor_qs.filter(region_id=region_id)
 
@@ -113,3 +114,7 @@ def batch_update_metrics_for_predictor_task(predictor_id, from_date, to_date):
             batch_size=2000,
             fields=['predicted_value', 'upper_value', 'lower_value']
         )
+
+        # Refresh the prediction progress for every date in the range
+        for date in generate_date_range(from_date, to_date):
+            MetricPredictionProgress.refresh(date=date)
