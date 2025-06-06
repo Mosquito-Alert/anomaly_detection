@@ -4,7 +4,6 @@ from celery import shared_task
 from django.db import IntegrityError, transaction, models
 from django.utils import timezone
 from anomaly_detection.utils.datetime import generate_date_range
-from anomaly_detection.predictions.models import MetricPredictionProgress
 
 
 @shared_task
@@ -88,7 +87,7 @@ def batch_update_metrics_for_predictor_task(predictor_id, from_date, to_date):
     """
     Update the predicted values in the Metric model for a specific predictor
     """
-    from anomaly_detection.predictions.models import Metric, Predictor
+    from anomaly_detection.predictions.models import Metric, Predictor, MetricPredictionProgress
 
     try:
         predictor = Predictor.objects.get(id=predictor_id)
